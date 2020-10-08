@@ -28,6 +28,7 @@ async function updateStateLabel() {
     // remove all state labels of the issue
     removeStateLabels();
     // add the label corresponding to the column to the issue
+    let columnId = projectCard.column_id;
     let { data: column } = await octokit.projects.getColumn({
         columnId,
     }),
