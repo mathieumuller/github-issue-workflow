@@ -23,12 +23,12 @@ try {
     core.setFailed(error.message);
 }
 
-function updateStateLabel() {
+async function updateStateLabel() {
     console.log(payload);
     // remove all state labels of the issue
     removeStateLabels();
     // add the label corresponding to the column to the issue
-    let columnName = getColumnName();
+    let columnName = await getColumnName();
     console.log(labels, columnName, labels[columnName]);
     addLabel(labels[columnName]);
 }
