@@ -23,13 +23,19 @@ try {
     core.setFailed(error.message);
 }
 
-console.log(payload);
-// remove all state labels of the issue
-removeStateLabels();
-// add the label corresponding to the column to the issue
-let columnName = await getColumnName();
-console.log(labels, columnName, labels[columnName]);
-addLabel(labels[columnName]);
+async function updateStateLabel() {
+    console.log(payload);
+    // remove all state labels of the issue
+    removeStateLabels();
+    // add the label corresponding to the column to the issue
+    let { data: column } = await octokit.projects.getColumn({
+        columnId,
+    }),
+    columnName = column.name;
+
+    console.log(labels, columnName, labels[columnName]);
+    addLabel(labels[columnName]);
+}
 
 function basename(path) {
     return path.split('/').reverse()[0];
