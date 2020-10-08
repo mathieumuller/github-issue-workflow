@@ -1,0 +1,20 @@
+{
+  "name": "github-issue-workflow",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mathieumuller/github-issue-workflow.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mathieumuller/github-issue-workflow/issues"
+  },
+  "homepage": "https://github.com/mathieumuller/github-issue-workflow#readme",
+  "dependencies": {
+    "@actions/core": "^1.2.6",
+    "@actions/github": "^4.0.0"
+  }
+}

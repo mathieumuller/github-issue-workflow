@@ -1,0 +1,25 @@
+name: Process the issue workflow
+
+on:
+  project_card:
+    types: [moved]
+
+jobs:
+  update_label: 
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Setup Github Actions
+      uses: actions/checkout@v2
+
+    - name: Install required NPM dependencies
+      run: |
+        npm install @actions/core 
+        npm install @actions/github
+
+    - name: Update state label
+      uses: ./.github/actions/issue_update_state/ 
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+ 

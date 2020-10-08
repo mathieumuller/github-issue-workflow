@@ -1,0 +1,21 @@
+name: 'request-reviews'
+description: 'Request the reviews'
+inputs:
+  token:
+    description: 'The repository authentication token'
+    required: true
+  reviewers_number:
+    description: 'The number of reviewers assigned to a pull request'
+    required: true
+    default: 3
+  reviewers:
+    description: 'The list of users allowed to review the pull requests'
+    required: true
+    default: adpauly;wirabelle;tibahut;Neime
+  permanent_reviewer:
+    description: 'The collaborator assigned by default on pull requests'
+    required: true
+    default: mathieumuller
+runs:
+  using: 'node12'
+  main: 'index.js'
