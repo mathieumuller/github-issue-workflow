@@ -28,7 +28,7 @@ async function updateStateLabel() {
     // remove all state labels of the issue
     removeStateLabels();
     // add the label corresponding to the column to the issue
-    let columnName = await getColumnName();
+    let columnName = getColumnName();
     console.log(labels, columnName, labels[columnName]);
     addLabel(labels[columnName]);
 }
