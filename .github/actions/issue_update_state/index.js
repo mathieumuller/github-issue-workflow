@@ -14,6 +14,7 @@ const core = require('@actions/core'),
         'To do': 'State:ToDo',
         'To plan': 'State:ToPlan',
         'In progress': 'State:InProgress',
+        'To review': 'State:InReview'
     };
 
 try {
