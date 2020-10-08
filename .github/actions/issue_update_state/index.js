@@ -23,7 +23,7 @@ try {
     core.setFailed(error.message);
 }
 
-async function updateStateLabel() {
+function updateStateLabel() {
     console.log(payload);
     // remove all state labels of the issue
     removeStateLabels();
@@ -73,9 +73,9 @@ async function removeLabel(label) {
 }
 
 async function getColumnName(columnId) {
-    let ({ data: columnName } = await octokit.projects.getColumn({
+    let { data: columnName } = await octokit.projects.getColumn({
         columnId,
-    }));
+    });
 
     return columnName;
 }
