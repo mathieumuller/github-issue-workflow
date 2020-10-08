@@ -73,7 +73,9 @@ async function removeLabel(label) {
 }
 
 async function getColumnName(columnId) {
-    return ({ data: columnName } = await octokit.projects.getColumn({
+    let ({ data: columnName } = await octokit.projects.getColumn({
         columnId,
     }));
+
+    return columnName;
 }
