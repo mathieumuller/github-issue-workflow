@@ -25,14 +25,15 @@ try {
 }
 
 async function updateStateLabel() {
-    // console.log(payload);
-    let column = await getColumn();
-    console.log(column);
     // remove all state labels of the issue
     removeStateLabels(issueNumber);
-
+    
     // add the label corresponding to the content to the issue
-    addLabel(labels[column.name], issueNumber);
+    let column = await getColumn(),
+        columnName = column.name;
+
+    console.log(column, columnName, labels, labels[columnName]);
+    addLabel(labels[columnName], issueNumber);
 }
 
 function addLabel(label, issueNumber) {
