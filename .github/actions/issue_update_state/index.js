@@ -23,13 +23,11 @@ try {
 }
 
 async function updateStateLabel() {
-    console.log(payload);
-    let issue = getIssue(),
-        issueNumber = issue.number
-        column = getColumn(),
-        columnName = column.name;
+    // console.log(payload);
+    let issue = await getIssue(),
+        column = await getColumn()
 
-    console.log(issue, issueNumber, column, columnName, labels, labels[columnName]);
+    console.log(issue, column);
     return;
         
     // remove all state labels of the issue
