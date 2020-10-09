@@ -28,6 +28,11 @@ async function updateStateLabel() {
         column = (await getColumn()).data
     ;
         
+    console.log(issue);
+    console.log(issue.number);
+    console.log(column);
+    console.log(column.name);
+    return;
     // remove all state labels of the issue
     removeStateLabels(issue.number);
 
