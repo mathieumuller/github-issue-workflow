@@ -77,7 +77,8 @@ async function getType() {
         owner: repositoryOwner,
         repo: repositoryName,
         issue_number: issueNumber
-    });
+    }),
+    type;
 
     // and remove those with the 'State:' prefix
     currentLabels.forEach(function(currentLabel) {
@@ -85,8 +86,6 @@ async function getType() {
             type = currentLabel.name.substring(typeLabelPrefix.length);
         }
     });
-
-    console.log(type);
 
     return type;
 }
