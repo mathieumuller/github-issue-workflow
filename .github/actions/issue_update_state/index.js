@@ -9,7 +9,6 @@ const core = require('@actions/core'),
     repositoryName = repository.split('/')[1],
     stateLabelPrefix = core.getInput('stateLabelPrefix'),
     projectCard = payload.project_card,
-    issueNumber = basename(projectCard.content_url),
     labels = {
         'To do': 'State:ToDo',
         'To plan': 'State:ToPlan',
@@ -25,21 +24,29 @@ try {
 
 async function updateStateLabel() {
     console.log(payload);
+    let issue = await getIssue(),
+        issueNumber = issue.number
+        column = await getColumn(),
+        columnName = column.name;
+
+    console.log(issue, issueNumber, column, columnName, labels, labels[columnName]);
+    return;
+        
     // remove all state labels of the issue
-    removeStateLabels();
-    // add the label corresponding to the column to the issue
-    console.log(projectCard.column_id, labels);
+    removeStateLabels(issueNumber);
+    // add the label corresponding to the content to the issue
+    console.log(projectCard.content_id, labels);
     let columnName = await getColumnName(projectCard.column_id);
 
     console.log(columnName, labels[columnName]);
-    addLabel(labels[columnName]);
+    addLabel(labels[columnName], issueNumber);
 }
 
 function basename(path) {
     return path.split('/').reverse()[0];
 }
 
-function addLabel(label) {
+function addLabel(label, issueNumber) {
     let lbs = [label];
     octokit.issues.addLabels({
         repositoryOwner,
@@ -49,7 +56,7 @@ function addLabel(label) {
     });
 }
 
-async function removeStateLabels() {
+async function removeStateLabels(issueNumber) {
     // get all the current labels of the issue
     let { data: currentLabels } = await octokit.issues.listLabelsOnIssue({
         owner: repositoryOwner,
@@ -60,12 +67,12 @@ async function removeStateLabels() {
     // and remove those with the 'State:' prefix
     currentLabels.forEach(function(currentLabel) {
         if (currentLabel.name.substring(0, 5) === stateLabelPrefix) {
-            removeLabel(currentLabel.name);
+            removeLabel(currentLabel.name, issueNumber);
         }
     });
 }
 
-async function removeLabel(label) {
+async function removeLabel(label, issueNumber) {
     octokit.issues.removeLabel({
         owner: repositoryOwner,
         repo: repositoryName,
@@ -74,10 +81,12 @@ async function removeLabel(label) {
     });
 }
 
-async function getColumnName(columnId) {
-    let { data: column } = await octokit.projects.getColumn({
-        columnId
-    });
+async function getColumn() {
+    let columnUrl = projectCard.column_url
+    return await octokit.request({ columnUrl });
+}
 
-    return column.name;
+async function getIssue() {
+    let columnUrl = projectCard.content_url
+    return await octokit.request({ contentUrl });
 }
