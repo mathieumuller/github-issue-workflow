@@ -24,9 +24,9 @@ try {
 
 async function updateStateLabel() {
     console.log(payload);
-    let issue = await getIssue(),
+    let issue = getIssue(),
         issueNumber = issue.number
-        column = await getColumn(),
+        column = getColumn(),
         columnName = column.name;
 
     console.log(issue, issueNumber, column, columnName, labels, labels[columnName]);
