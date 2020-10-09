@@ -27,6 +27,7 @@ try {
 async function updateStateLabel() {
     // console.log(payload);
     let column = await getColumn();
+    console.log(column);
     // remove all state labels of the issue
     removeStateLabels(issueNumber);
 
@@ -70,15 +71,8 @@ async function removeLabel(label, issueNumber) {
 }
 
 async function getColumn() {
-    let columnId = projectCard.column_id;
-
-    // let toto = await (octokit.request('GET /projects/column'))
-    // console.log(columnId);
-    // return await octokit.projects.getColumn({
-    //     columnId,
-    // });;
-
-    const column = await request("/projects/columns/"+columnId, {
+    let columnId = projectCard.column_id,
+    { data: column } = await request("/projects/columns/"+columnId, {
         method: "GET",
         headers: {
           authorization: "token "+core.getInput('token'),
@@ -90,8 +84,8 @@ async function getColumn() {
         org: "uppler",
         type: "private",
       });
-      
-      console.log(column.data);
+
+      return column;
 }
 
 function basename(path) {
