@@ -26,18 +26,18 @@ try {
 
 async function updateStateLabel() {
     // remove all state labels of the issue
-    removeStateLabels(issueNumber);
+    removeStateLabels();
     
     // add the label corresponding to the content to the issue
     let column = await getColumn(),
         columnName = column.name;
 
-    addLabel(labels[columnName], issueNumber);
+    addLabel(labels[columnName]);
 }
 
-function addLabel(label, issueNumber) {
+function addLabel(label) {
 
-    console.log(label, issueNumber);
+    console.log(label, issueNumber, repositoryOwner, repositoryName);
     octokit.issues.addLabels({
         repositoryOwner,
         repositoryName,
@@ -46,7 +46,7 @@ function addLabel(label, issueNumber) {
     });
 }
 
-async function removeStateLabels(issueNumber) {
+async function removeStateLabels() {
     // get all the current labels of the issue
     let { data: currentLabels } = await octokit.issues.listLabelsOnIssue({
         owner: repositoryOwner,
@@ -62,7 +62,7 @@ async function removeStateLabels(issueNumber) {
     });
 }
 
-async function removeLabel(label, issueNumber) {
+async function removeLabel(label) {
     octokit.issues.removeLabel({
         owner: repositoryOwner,
         repo: repositoryName,
