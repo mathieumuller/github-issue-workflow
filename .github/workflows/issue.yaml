@@ -21,5 +21,10 @@ jobs:
       uses: ./.github/actions/issue_update_state/ 
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create the pull request
+      uses: ./.github/actions/issue_create_pull_request/ 
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
     
  

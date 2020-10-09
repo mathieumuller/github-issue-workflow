@@ -1,0 +1,22 @@
+name: 'issue-create-pull-request'
+description: 'Creates an empty pull request from the card isuue'
+inputs:
+  token:
+    description: 'The repository authentication token'
+    required: true
+  typeLabelPrefix:
+    description: 'The prefix for the "type" labels'
+    required: false
+    default: 'Type:'
+  labelToListen: 
+    description: 'The label that triggers the pull request creation'
+    required: false
+    default: 'State:InProgress'
+  expertLabelPrefix:
+    description: 'The prefix for the "expert" labels'
+    required: false
+    default: 'Expert:'
+  
+runs:
+  using: 'node12'
+  main: 'index.js'
