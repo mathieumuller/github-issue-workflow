@@ -78,10 +78,12 @@ async function removeLabel(label, issueNumber) {
 
 async function getColumn() {
     let columnUrl = projectCard.column_url;
+    console.log(columnUrl);
     return await octokit.request({ columnUrl });
 }
 
 async function getIssue() {
     let contentUrl = projectCard.content_url;
+    console.log(contentUrl);
     return await octokit.request({ contentUrl });
 }
