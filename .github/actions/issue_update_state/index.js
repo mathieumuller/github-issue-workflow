@@ -32,11 +32,12 @@ async function updateStateLabel() {
     let column = await getColumn(),
         columnName = column.name;
 
-    //addLabel(labels[columnName], issueNumber);
+    addLabel(labels[columnName], issueNumber);
 }
 
 function addLabel(label, issueNumber) {
 
+    console.log(label, issueNumber);
     octokit.issues.addLabels({
         repositoryOwner,
         repositoryName,
