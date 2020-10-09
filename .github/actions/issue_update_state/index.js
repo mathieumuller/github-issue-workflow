@@ -1,6 +1,5 @@
 const core = require('@actions/core'),
     github = require('@actions/github'),
-    { request } = require("@octokit/request"),
     token = core.getInput('token'),
     context = github.context,
     octokit = github.getOctokit(token),
@@ -30,9 +29,9 @@ async function updateStateLabel() {
     
     // add the label corresponding to the content to the issue
     let column = await getColumn(),
-        columnName = column.name;
+        label = labels[column.name];
 
-    addLabel(labels[columnName]);
+    addLabel(label);
 }
 
 function addLabel(label) {
@@ -40,7 +39,7 @@ function addLabel(label) {
         owner: repositoryOwner,
         repo: repositoryName,
         issue_number: issueNumber,
-        labels: label
+        labels: [label]
     });
 }
 
@@ -54,6 +53,7 @@ async function removeStateLabels() {
 
     // and remove those with the 'State:' prefix
     currentLabels.forEach(function(currentLabel) {
+        console.log(currentLabel.name.substring(0, 5));
         if (currentLabel.name.substring(0, 5) === stateLabelPrefix) {
             removeLabel(currentLabel.name, issueNumber);
         }
@@ -72,25 +72,11 @@ async function removeLabel(label) {
 async function getColumn() {
     let columnId = projectCard.column_id;
     
-    let toto = await octokit.projects.getColumn({
+    let { data: column } = await octokit.projects.getColumn({
       column_id: columnId,
     });
-    console.log(toto);
 
-    let { data: column } = await request("/projects/columns/"+columnId, {
-        method: "GET",
-        headers: {
-          authorization: "token "+core.getInput('token'),
-        },
-        mediaType: {
-            format: 'JSON',
-            previews: ['inertia-preview']
-        },
-        org: "uppler",
-        type: "private",
-      });
-
-      return column;
+    return column;
 }
 
 function basename(path) {
