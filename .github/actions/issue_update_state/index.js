@@ -24,24 +24,16 @@ try {
 
 async function updateStateLabel() {
     // console.log(payload);
-    let issue = await getIssue(),
-        column = await getColumn()
-
-    console.log(issue, column);
-    return;
+    let issue = (await getIssue()).data,
+        column = (await getColumn()).data
+    ;
         
     // remove all state labels of the issue
-    removeStateLabels(issueNumber);
+    removeStateLabels(issue.number);
+
     // add the label corresponding to the content to the issue
-    console.log(projectCard.content_id, labels);
-    let columnName = await getColumnName(projectCard.column_id);
-
-    console.log(columnName, labels[columnName]);
-    addLabel(labels[columnName], issueNumber);
-}
-
-function basename(path) {
-    return path.split('/').reverse()[0];
+    let columnName = column.name;
+    addLabel(labels[columnName], issue.number);
 }
 
 function addLabel(label, issueNumber) {
