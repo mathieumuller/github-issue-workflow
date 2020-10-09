@@ -1,5 +1,6 @@
 const core = require('@actions/core'),
     github = require('@actions/github'),
+    request = require("@octokit/request"),
     token = core.getInput('token'),
     context = github.context,
     octokit = github.getOctokit(token),
@@ -78,10 +79,27 @@ async function removeLabel(label, issueNumber) {
 
 async function getColumn() {
     let columnId = projectCard.column_id;
-    console.log(columnId);
-    return await octokit.projects.getColumn({
-        columnId,
-    });;
+
+    // let toto = await (octokit.request('GET /projects/column'))
+    // console.log(columnId);
+    // return await octokit.projects.getColumn({
+    //     columnId,
+    // });;
+
+    const column = await request("/projects/columns/"+columnId, {
+        method: "GET",
+        headers: {
+          authorization: "token "+core.getInput('token'),
+        },
+        mediaType: {
+            format: 'JSON',
+            previews: ['inertia-preview']
+        },
+        org: "uppler",
+        type: "private",
+      });
+      
+      console.log(column.data);
 }
 
 function basename(path) {
