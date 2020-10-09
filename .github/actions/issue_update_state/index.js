@@ -9,6 +9,7 @@ const core = require('@actions/core'),
     repositoryName = repository.split('/')[1],
     stateLabelPrefix = core.getInput('stateLabelPrefix'),
     projectCard = payload.project_card,
+    issueNumber = basename(projectCard.content_url),
     labels = {
         'To do': 'State:ToDo',
         'To plan': 'State:ToPlan',
@@ -24,21 +25,18 @@ try {
 
 async function updateStateLabel() {
     // console.log(payload);
-    let issue = (await getIssue()).data,
-        column = (await getColumn()).data
-    ;
+    let column = await getColumn();
         
-    console.log(issue);
-    console.log(issue.number);
+    console.log(issueNumber);
     console.log(column);
     console.log(column.name);
     return;
     // remove all state labels of the issue
-    removeStateLabels(issue.number);
+    removeStateLabels(issueNumber);
 
     // add the label corresponding to the content to the issue
     let columnName = column.name;
-    addLabel(labels[columnName], issue.number);
+    addLabel(labels[columnName], issueNumber);
 }
 
 function addLabel(label, issueNumber) {
@@ -77,13 +75,12 @@ async function removeLabel(label, issueNumber) {
 }
 
 async function getColumn() {
-    let columnUrl = "GET " + projectCard.column_url;
-    console.log(columnUrl);
-    return await octokit.request({ columnUrl });
+    let columnId = projectCard.column_id;
+    return await octokit.projects.getColumn({
+        columnId,
+    });;
 }
 
-async function getIssue() {
-    let contentUrl = "GET " + projectCard.content_url;
-    console.log(contentUrl);
-    return await octokit.request({ contentUrl });
-}
+function basename(path) {
+    return path.split('/').reverse()[0];
+ }
