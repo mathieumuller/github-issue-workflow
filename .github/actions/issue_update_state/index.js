@@ -40,7 +40,7 @@ function addLabel(label) {
         owner: repositoryOwner,
         repo: repositoryName,
         issue_number: issueNumber,
-        name: label
+        labels: label
     });
 }
 
