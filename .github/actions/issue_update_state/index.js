@@ -72,7 +72,7 @@ async function removeLabel(label) {
 async function getColumn() {
     let columnId = projectCard.column_id;
     
-    let toto = octokit.projects.getColumn({
+    let toto = await octokit.projects.getColumn({
       column_id: columnId,
     });
     console.log(toto);
