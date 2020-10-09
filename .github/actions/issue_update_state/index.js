@@ -17,6 +17,8 @@ const core = require('@actions/core'),
         'To review': 'State:InReview'
     };
 
+    console.log(octokit);
+
 try {
     updateStateLabel();
 } catch (error) {
@@ -76,6 +78,7 @@ async function removeLabel(label, issueNumber) {
 
 async function getColumn() {
     let columnId = projectCard.column_id;
+    console.log(columnId);
     return await octokit.projects.getColumn({
         columnId,
     });;
