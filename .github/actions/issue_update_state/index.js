@@ -32,7 +32,7 @@ async function updateStateLabel() {
     let column = await getColumn(),
         columnName = column.name;
 
-    console.log(column, columnName, labels, labels[columnName]);
+    console.log(issueNumber);
     addLabel(labels[columnName], issueNumber);
 }
 
