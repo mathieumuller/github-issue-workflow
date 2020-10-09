@@ -18,8 +18,6 @@ const core = require('@actions/core'),
         'To review': 'State:InReview'
     };
 
-    console.log(octokit);
-
 try {
     updateStateLabel();
 } catch (error) {
@@ -28,17 +26,13 @@ try {
 
 async function updateStateLabel() {
     // console.log(payload);
-    let column = await getColumn();
-        
-    console.log(issueNumber);
-    console.log(column);
-    console.log(column.name);
-    return;
+    let column = await getColumn(),
+    columnName = column.name
+    ;
     // remove all state labels of the issue
     removeStateLabels(issueNumber);
 
     // add the label corresponding to the content to the issue
-    let columnName = column.name;
     addLabel(labels[columnName], issueNumber);
 }
 
