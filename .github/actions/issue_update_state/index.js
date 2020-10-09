@@ -36,13 +36,11 @@ async function updateStateLabel() {
 }
 
 function addLabel(label) {
-
-    console.log(label, issueNumber, repositoryOwner, repositoryName);
     octokit.issues.addLabels({
-        repositoryOwner,
-        repositoryName,
-        issueNumber,
-        label,
+        owner: repositoryOwner,
+        repo: repositoryName,
+        issue_number: issueNumber,
+        name: label
     });
 }
 
@@ -51,7 +49,7 @@ async function removeStateLabels() {
     let { data: currentLabels } = await octokit.issues.listLabelsOnIssue({
         owner: repositoryOwner,
         repo: repositoryName,
-        issue_number: issueNumber,
+        issue_number: issueNumber
     });
 
     // and remove those with the 'State:' prefix
@@ -67,13 +65,20 @@ async function removeLabel(label) {
         owner: repositoryOwner,
         repo: repositoryName,
         issue_number: issueNumber,
-        name: label,
+        name: label
     });
 }
 
 async function getColumn() {
-    let columnId = projectCard.column_id,
-    { data: column } = await request("/projects/columns/"+columnId, {
+    let columnId = projectCard.column_id;
+    
+    let {data: toto} = 
+    octokit.projects.getColumn({
+      column_id: columnId,
+    });
+    console.log(toto);
+
+    let { data: column } = await request("/projects/columns/"+columnId, {
         method: "GET",
         headers: {
           authorization: "token "+core.getInput('token'),
