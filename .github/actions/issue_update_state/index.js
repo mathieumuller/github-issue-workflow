@@ -1,6 +1,6 @@
 const core = require('@actions/core'),
     github = require('@actions/github'),
-    request = require("@octokit/request"),
+    { request } = require("@octokit/request"),
     token = core.getInput('token'),
     context = github.context,
     octokit = github.getOctokit(token),
