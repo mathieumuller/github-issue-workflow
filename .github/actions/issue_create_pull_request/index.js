@@ -69,13 +69,13 @@ async function createBranch(originBranchName,  branchName)
 
 async function updateChangeLog(milestone, issueTitle, branchName, sender)
 {
-    releaseChangeLog = {};
-    releaseChangeLog[milestone] = (changelog[milestone] || []).push(issueTitle);
-    console.log(releaseChangeLog);
-    let cl = changelog;
-    cl = Object.assign(cl, releaseChangeLog);
+    if (changelog[milestone] !== undefined) {
+        changelog[milestone].push(issueTitle);
+    } else {
+        changelog[milestone] = [issueTitle];
+    }
 
-    console.log(milestone, issueTitle, branchName, sender, cl);
+    console.log(milestone, issueTitle, branchName, sender, changelog);
 
     // octokit.repos.createOrUpdateFileContents({
     //     owner: repositoryOwner,
