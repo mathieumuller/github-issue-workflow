@@ -35,17 +35,17 @@ async function createPullRequest() {
     pullRequestName = '['+labels.expert+'] '+ issue.title
     originBranchName = "release/"+milestone;
 
-    createBranch(originBranchName, branchName);
+    //createBranch(originBranchName, branchName);
     updateChangeLog(milestone, issue.title, branchName, author);
 
-    octokit.pulls.create({
-        owner: repositoryOwner,
-        repo: repositoryName,
-        title: pullRequestName,
-        head: branchName,
-        base: originBranchName,
-        draft: 'yes'
-      });
+    // octokit.pulls.create({
+    //     owner: repositoryOwner,
+    //     repo: repositoryName,
+    //     title: pullRequestName,
+    //     head: branchName,
+    //     base: originBranchName,
+    //     draft: 'yes'
+    //   });
 }
 
 async function createBranch(originBranchName,  branchName) 
@@ -62,7 +62,7 @@ async function createBranch(originBranchName,  branchName)
 
     console.log(response);
 
-    return response.object.newBranch;
+    return response.object;
 }
 
 
@@ -74,22 +74,24 @@ async function updateChangeLog(milestone, issueTitle, branchName, sender)
     let cl = changelog;
     cl = Object.assign(cl, relaseChangeLog);
 
-    octokit.repos.createOrUpdateFileContents({
-        owner: repositoryOwner,
-        repo: repositoryName,
-        path: "changelog.json",
-        message: "update changelog.json",
-        content: cl,
-        branch: branchName,
-        committer: {
-            name: sender.login,
-            email: sender.email,
-        },
-        author: {
-            name: sender.login,
-            email: sender.email,
-        }
-    });
+    console.log(milestone, issueTitle, branchName, sender, cl);
+
+    // octokit.repos.createOrUpdateFileContents({
+    //     owner: repositoryOwner,
+    //     repo: repositoryName,
+    //     path: "changelog.json",
+    //     message: "update changelog.json",
+    //     content: cl,
+    //     branch: branchName,
+    //     committer: {
+    //         name: sender.login,
+    //         email: sender.email,
+    //     },
+    //     author: {
+    //         name: sender.login,
+    //         email: sender.email,
+    //     }
+    // });
 }
 
 async function getBranch(name) {
