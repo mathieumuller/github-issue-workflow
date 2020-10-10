@@ -50,10 +50,10 @@ async function createPullRequest() {
 
 async function createBranch(originBranchName,  branchName) 
 {
-    console.log(originBranchName);
     let originBranch = await getBranch(originBranchName),
         originSha = originBranch.sha;
 
+        console.log(originBranch);
 
     let {object: newBranch } = await octokit.git.createRef({
       owner: repositoryOwner,
