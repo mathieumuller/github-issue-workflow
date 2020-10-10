@@ -56,7 +56,7 @@ async function createBranch(originBranchName,  branchName)
     let response = await octokit.git.createRef({
       owner: repositoryOwner,
       repo: repositoryName,
-      ref: branchName,
+      ref: "refs/heads/"+branchName,
       sha: originSha,
     });
 
