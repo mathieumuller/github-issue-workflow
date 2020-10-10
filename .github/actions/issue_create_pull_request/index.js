@@ -67,7 +67,7 @@ async function createBranch(originBranchName,  branchName)
 async function updateChangeLog(milestone, issueTitle, branchName, sender)
 {
     relaseChangeLog = {
-        milestone: (changelog[milestone] ?? []).push(issueTitle) 
+        milestone: (changelog[milestone] || []).push(issueTitle) 
     };
 
     changelog = Object.assign(changelog, relaseChangeLog);
