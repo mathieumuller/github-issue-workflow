@@ -69,15 +69,15 @@ async function updateChangeLog(milestone, issueTitle, branchName, sender)
     relaseChangeLog = {
         milestone: (changelog[milestone] || []).push(issueTitle) 
     };
-
-    changelog = Object.assign(changelog, relaseChangeLog);
+    let cl = changelog;
+    cl = Object.assign(cl, relaseChangeLog);
 
     octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
         path: "changelog.json",
         message: "update changelog.json",
-        content: changelog,
+        content: cl,
         branch: branchName,
         committer: {
             name: sender.login,
