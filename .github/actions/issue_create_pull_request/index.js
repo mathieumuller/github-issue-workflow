@@ -51,7 +51,7 @@ async function createPullRequest() {
 async function createBranch(originBranchName,  branchName) 
 {
     console.log(originBranchName);
-    let { data: originBranch } = await getBranch(originBranchName),
+    let originBranch = await getBranch(originBranchName),
         originSha = originBranch.sha;
 
 
