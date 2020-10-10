@@ -11,7 +11,8 @@ const core = require('@actions/core'),
     expertLabelPrefix = core.getInput('expertLabelPrefix'),
     labelToListen = core.getInput('labelToListen'),
     projectCard = payload.project_card,
-    issueNumber = basename(projectCard.content_url);
+    issueNumber = basename(projectCard.content_url),
+    changelog = require("../../../changelog.json");
 
 try {
     createPullRequest();
@@ -24,14 +25,15 @@ async function createPullRequest() {
     if (!hasLabel(labelToListen)) {
         return;
     }
-console.log(payload);
+    
     let issue = await getIssue(),
     author = payload.sender.login,
     milestone = issue.milestone.title,
     subject = stringToSlug(issue.title),
-    type = await getType(),
-    name = '[' +type+ '][' +milestone+ '] '+ subject;
-    console.log(issue);
+    labels = await getLabels(),
+    branchName = [labels.type, milestone, subject].join('/'),
+    pullRequestName = '['+labels.expert+'] '+ issue.title;
+    console.log(changelog, branchName, pullRequestName);
 }
 
 async function hasLabel(label) {
@@ -71,23 +73,26 @@ async function getIssue()
       return issue;
  }
 
-async function getType() {
+async function getLabels() {
     // get all the current labels of the issue
     let { data: currentLabels } = await octokit.issues.listLabelsOnIssue({
         owner: repositoryOwner,
         repo: repositoryName,
         issue_number: issueNumber
     }),
-    type;
+    list = {};
 
     // and remove those with the 'State:' prefix
     currentLabels.forEach(function(currentLabel) {
         if (currentLabel.name.substring(0, typeLabelPrefix.length) === typeLabelPrefix) {
-            type = currentLabel.name.substring(typeLabelPrefix.length);
+            list = Object.assign(list, {'type': currentLabel.name.substring(typeLabelPrefix.length)});
+        }
+        if (currentLabel.name.substring(0, expertLabelPrefix.length) === expertLabelPrefix) {
+            list = Object.assign(list, {'expert': currentLabel.name.substring(expertLabelPrefix.length)});
         }
     });
 
-    return type;
+    return list;
 }
 
 // async function removeLabel(label) {
