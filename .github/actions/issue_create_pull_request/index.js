@@ -68,11 +68,11 @@ async function createBranch(originBranchName,  branchName)
 
 async function updateChangeLog(milestone, issueTitle, branchName, sender)
 {
-    relaseChangeLog = {
-        milestone: (changelog[milestone] || []).push(issueTitle) 
-    };
+    releaseChangeLog = {};
+    releaseChangeLog[milestone] = (changelog[milestone] || []).push(issueTitle);
+    console.log(releaseChangeLog);
     let cl = changelog;
-    cl = Object.assign(cl, relaseChangeLog);
+    cl = Object.assign(cl, releaseChangeLog);
 
     console.log(milestone, issueTitle, branchName, sender, cl);
 
