@@ -35,7 +35,7 @@ async function createPullRequest() {
     pullRequestName = '['+labels.expert+'] '+ issue.title
     originBranchName = "release/"+milestone;
 
-    createBranch(branchName, originBranchName);
+    createBranch(originBranchName, branchName);
     updateChangeLog(milestone, issue.title, branchName, author);
 
     octokit.pulls.create({
