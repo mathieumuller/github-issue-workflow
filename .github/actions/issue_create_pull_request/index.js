@@ -11,8 +11,9 @@ const core = require('@actions/core'),
     expertLabelPrefix = core.getInput('expertLabelPrefix'),
     labelToListen = core.getInput('labelToListen'),
     projectCard = payload.project_card,
-    issueNumber = basename(projectCard.content_url),
-    changelog = require("../../../changelog.json");
+    issueNumber = basename(projectCard.content_url);
+
+    let changelog = require("../../../changelog.json");
 
 try {
     createPullRequest();
@@ -32,7 +33,7 @@ async function createPullRequest() {
     subject = stringToSlug(issue.title),
     labels = await getLabels(),
     branchName = [labels.type, milestone, subject].join('/'),
-    pullRequestName = '['+labels.expert+'] '+ issue.title
+    pullRequestName = '['+labels.expert+'] '+ issue.title,
     originBranchName = "release/"+milestone;
 
     //createBranch(originBranchName, branchName);
