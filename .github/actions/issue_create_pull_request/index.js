@@ -53,14 +53,16 @@ async function createBranch(originBranchName,  branchName)
     let originBranch = await getBranch(originBranchName),
         originSha = originBranch.commit.sha;
 
-    let {object: newBranch } = await octokit.git.createRef({
+    let response = await octokit.git.createRef({
       owner: repositoryOwner,
       repo: repositoryName,
       ref: branchName,
       sha: originSha,
     });
 
-    return newBranch;
+    console.log(response);
+
+    return response.object.newBranch;
 }
 
 
