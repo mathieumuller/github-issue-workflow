@@ -53,6 +53,7 @@ async function removeStateLabels() {
         issue_number: issueNumber
     });
 
+console.log(currentLabels);
     // and remove those with the 'State:' prefix
     currentLabels.forEach(function(currentLabel) {
         if (currentLabel.name.substring(0, stateLabelPrefix.length) === stateLabelPrefix) {
