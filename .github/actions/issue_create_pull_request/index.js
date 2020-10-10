@@ -53,11 +53,13 @@ async function createBranch(originBranchName,  branchName)
     let { data: originBranch } = await getBranch(originBranchName),
         originSha = originBranch.sha;
 
+    console.log(originBranchName, originBranch);
+
     let {object: newBranch } = await octokit.git.createRef({
       owner: repositoryOwner,
       repo: repositoryName,
       ref: branchName,
-      originSha,
+      sha: originSha,
     });
 
     return newBranch;
@@ -118,15 +120,6 @@ async function hasLabel(label) {
     return labelExists;
 }
 
-// function addLabel(label) {
-//     octokit.issues.addLabels({
-//         owner: repositoryOwner,
-//         repo: repositoryName,
-//         issue_number: issueNumber,
-//         labels: [label]
-//     });
-// }
-
 async function getIssue()
  {
     let { data: issue } = await octokit.issues.get({
@@ -150,30 +143,15 @@ async function getLabels() {
     // and remove those with the 'State:' prefix
     currentLabels.forEach(function(currentLabel) {
         if (currentLabel.name.substring(0, typeLabelPrefix.length) === typeLabelPrefix) {
-            console.log('type');
             list = Object.assign(list, {'type': currentLabel.name.substring(typeLabelPrefix.length)});
         }
         if (currentLabel.name.substring(0, expertLabelPrefix.length) === expertLabelPrefix) {
-            console.log('expert');
             list = Object.assign(list, {'expert': currentLabel.name.substring(expertLabelPrefix.length)});
         }
     });
 
-    console.log(list);
-
     return list;
 }
-
-// async function removeLabel(label) {
-//     octokit.issues.removeLabel({
-//         owner: repositoryOwner,
-//         repo: repositoryName,
-//         issue_number: issueNumber,
-//         name: label
-//     });
-// }
-
-
 
 function basename(path) {
     return path.split('/').reverse()[0];
