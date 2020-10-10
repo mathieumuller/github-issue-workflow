@@ -31,16 +31,18 @@ async function updateStateLabel() {
     let column = await getColumn(),
         label = labels[column.name];
 
-    addLabel(label);
+    await addLabel(label);
 }
 
-function addLabel(label) {
-    octokit.issues.addLabels({
+async function addLabel(label) {
+    let addLabel = await octokit.issues.addLabels({
         owner: repositoryOwner,
         repo: repositoryName,
         issue_number: issueNumber,
         labels: [label]
     });
+
+    return addLabel;
 }
 
 async function removeStateLabels() {
