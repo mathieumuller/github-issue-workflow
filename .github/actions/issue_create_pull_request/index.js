@@ -27,14 +27,79 @@ async function createPullRequest() {
     }
     
     let issue = await getIssue(),
-    author = payload.sender.login,
+    author = payload.sender,
     milestone = issue.milestone.title,
     subject = stringToSlug(issue.title),
     labels = await getLabels(),
     branchName = [labels.type, milestone, subject].join('/'),
-    pullRequestName = '['+labels.expert+'] '+ issue.title;
-    console.log(changelog, branchName, pullRequestName);
+    pullRequestName = '['+labels.expert+'] '+ issue.title
+    originBranchName = "release/"+milestone;
+
+    createBranch(branchName, originBranchName);
+    updateChangeLog(milestone, issue.title, branchName, author);
+
+    octokit.pulls.create({
+        owner: repositoryOwner,
+        repo: repositoryName,
+        title: pullRequestName,
+        head: branchName,
+        base: originBranchName,
+        draft: 'yes'
+      });
 }
+
+async function createBranch(originBranchName,  branchName) 
+{
+    let { data: originBranch } = await getBranch(originBranchName),
+        originSha = originBranch.sha;
+
+    let {object: newBranch } = await octokit.git.createRef({
+      owner: repositoryOwner,
+      repo: repositoryName,
+      ref: branchName,
+      originSha,
+    });
+
+    return newBranch;
+}
+
+
+async function updateChangeLog(milestone, issueTitle, branchName, sender)
+{
+    relaseChangeLog = {
+        milestone: (changelog[milestone] ?? []).push(issueTitle) 
+    };
+
+    changelog = Object.assign(changelog, relaseChangeLog);
+
+    octokit.repos.createOrUpdateFileContents({
+        owner: repositoryOwner,
+        repo: repositoryName,
+        path: "changelog.json",
+        message: "update changelog.json",
+        content: changelog,
+        branch: branchName,
+        committer: {
+            name: sender.login,
+            email: sender.email,
+        },
+        author: {
+            name: sender.login,
+            email: sender.email,
+        }
+    });
+}
+
+async function getBranch(name) {
+    let { data: branch } = await octokit.repos.getBranch({
+        owner: repositoryOwner,
+        repo: repositoryName,
+        branch: name,
+    });
+
+    return branch;
+}
+
 
 async function hasLabel(label) {
     let { data: currentLabels } = await octokit.issues.listLabelsOnIssue({

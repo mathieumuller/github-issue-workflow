@@ -31,18 +31,16 @@ async function updateStateLabel() {
     let column = await getColumn(),
         label = labels[column.name];
 
-    await addLabel(label);
+    addLabel(label);
 }
 
-async function addLabel(label) {
-    let addLabel = await octokit.issues.addLabels({
+function addLabel(label) {
+    octokit.issues.addLabels({
         owner: repositoryOwner,
         repo: repositoryName,
         issue_number: issueNumber,
         labels: [label]
     });
-
-    return addLabel;
 }
 
 async function removeStateLabels() {
@@ -53,7 +51,6 @@ async function removeStateLabels() {
         issue_number: issueNumber
     });
 
-console.log(currentLabels);
     // and remove those with the 'State:' prefix
     currentLabels.forEach(function(currentLabel) {
         if (currentLabel.name.substring(0, stateLabelPrefix.length) === stateLabelPrefix) {
