@@ -85,12 +85,16 @@ async function getLabels() {
     // and remove those with the 'State:' prefix
     currentLabels.forEach(function(currentLabel) {
         if (currentLabel.name.substring(0, typeLabelPrefix.length) === typeLabelPrefix) {
+            console.log('type');
             list = Object.assign(list, {'type': currentLabel.name.substring(typeLabelPrefix.length)});
         }
         if (currentLabel.name.substring(0, expertLabelPrefix.length) === expertLabelPrefix) {
+            console.log('expert');
             list = Object.assign(list, {'expert': currentLabel.name.substring(expertLabelPrefix.length)});
         }
     });
+
+    console.log(list);
 
     return list;
 }
