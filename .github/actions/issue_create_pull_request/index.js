@@ -111,7 +111,8 @@ async function updateChangeLog(milestone, issueTitle, branchName)
         repo: repositoryName,
         path: path,
         message: "update changelog.json",
-        content: btoa(JSON.stringify(changelog, null, 2)),
+        // content has to be base64 encoded
+        content: Buffer.from(JSON.stringify(changelog, null, 2)).toString('base64'),
         branch: branchName,
         sha: file.sha
     });
