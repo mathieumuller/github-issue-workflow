@@ -111,7 +111,7 @@ async function updateChangeLog(milestone, issueTitle, branchName)
         repo: repositoryName,
         path: path,
         message: "update changelog.json",
-        content:  JSON.stringify(changelog, null, 2),
+        content: btoa(JSON.stringify(changelog, null, 2)),
         branch: branchName,
         sha: file.sha
     });
