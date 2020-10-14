@@ -100,7 +100,7 @@ async function updateChangeLog(milestone, issueTitle, branchName)
     } else {
         changelog[milestone] = [issueTitle];
     }
-
+console.log(payload.sender);
     let response = await octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
