@@ -111,7 +111,7 @@ async function updateChangeLog(milestone, issueTitle, branchName)
         message: "update changelog.json",
         content: changelog,
         branch: branchName,
-        sha: 
+        //sha: 
     });
 }
 
