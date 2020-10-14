@@ -91,8 +91,8 @@ async function updateChangeLog(milestone, issueTitle, branchName, sender)
 
     // reorder te changelogs by release name
     console.log(changelog);
-    changelog = sortObjectByKeys(changelog);
-    console.log(changelog);
+    // changelog = sortObjectByKeys(changelog);
+    // console.log(changelog);
     changelog = JSON.stringify(changelog, null, 2);
     console.log(changelog);
 
