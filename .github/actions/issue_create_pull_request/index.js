@@ -70,7 +70,7 @@ async function getOrCreateBranch(originBranchName,  branchName)
     }
 
     // don't recreate an existing branch
-    if (targetBranch.length > 0) {
+    if (targetBranch != undefined) {
         let originBranch = await getBranch(originBranchName),
         originSha = originBranch.commit.sha;
 
