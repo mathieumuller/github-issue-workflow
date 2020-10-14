@@ -90,14 +90,16 @@ async function updateChangeLog(milestone, issueTitle, branchName, sender)
     }
 
     // reorder te changelogs by release name
+    console.log(changelog);
     changelog = sortObjectByKeys(changelog);
+    console.log(changelog);
     changelog = JSON.stringify(changelog, null, 2);
     console.log(changelog);
 
     octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
-        path: "changelog.json",
+        path: "/changelog.json",
         message: "update changelog.json",
         content: changelog,
         branch: branchName
