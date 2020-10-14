@@ -88,9 +88,11 @@ async function updateChangeLog(milestone, issueTitle, branchName, sender)
     } else {
         changelog[milestone] = [issueTitle];
     }
-    console.log(changelog);
+
     // reorder te changelogs by release name
     changelog = sortObjectByKeys(changelog);
+    changelog = JSON.stringify(changelog, null, 2);
+    console.log(changelog);
 
     octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
