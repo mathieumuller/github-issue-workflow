@@ -61,7 +61,7 @@ async function createPullRequest() {
 
 async function getOrCreateBranch(originBranchName,  branchName) 
 {
-    let targetBranch;
+    let targetBranch = null;
 
     try {
         targetBranch = await getBranch(branchName);
@@ -70,7 +70,7 @@ async function getOrCreateBranch(originBranchName,  branchName)
     }
 
     // don't recreate an existing branch
-    if (targetBranch != undefined) {
+    if (targetBranch === null) {
         let originBranch = await getBranch(originBranchName),
         originSha = originBranch.commit.sha;
 
