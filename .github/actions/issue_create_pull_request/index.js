@@ -39,15 +39,12 @@ async function createPullRequest() {
     // create a new entr in the changelog file
     await updateChangeLog(milestone, issue.title, branchName);
 
-    // complete the pull reuest name with the tags
+    // complete the pull request name with the tags
     if (labels.expert.length > 0)
     {
         pullRequestName = '[' + labels.expert + '] '+pullRequestName;
     }
 
-    console.log("creates a pull request " + pullRequestName);
-    console.log("head "+branchName);
-    console.log("base "+originBranchName);
     // creates the pull request
     octokit.pulls.create({
         owner: repositoryOwner,
@@ -104,8 +101,6 @@ async function updateChangeLog(milestone, issueTitle, branchName)
         changelog[milestone] = [issueTitle];
     }
 
-    console.log("update changelog.json");
-    console.log('branch '+branchName);
     let response = await octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
@@ -114,7 +109,15 @@ async function updateChangeLog(milestone, issueTitle, branchName)
         // content has to be base64 encoded
         content: Buffer.from(JSON.stringify(changelog, null, 2)).toString('base64'),
         branch: branchName,
-        sha: file.sha
+        sha: file.sha,
+        committer: {
+            name: payload.sender.name,
+            email: payload.sender.email || 'mathieu.muller@uppler.com'
+        },
+        author: {
+            name: payload.sender.name,
+            email: payload.sender.email || 'mathieu.muller@uppler.com'
+        }
     });
 
     return response;
