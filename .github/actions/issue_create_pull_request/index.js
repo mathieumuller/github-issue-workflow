@@ -29,7 +29,6 @@ async function createPullRequest() {
     
     let issue = await getIssue(),
         labels = await getLabels(),
-        author = payload.sender,
         milestone = issue.milestone.title,
         branchName = [labels.type, milestone, stringToSlug(issue.title)].join('/'),
         pullRequestName = issue.title,
@@ -38,7 +37,7 @@ async function createPullRequest() {
     // get or create the pull request branch
     getOrCreateBranch(originBranchName, branchName);
     // create a new entr in the changelog file
-    updateChangeLog(milestone, issue.title, branchName, author);
+    updateChangeLog(milestone, issue.title, branchName);
 
     // complete the pull reuest name with the tags
     if (labels.expert.length > 0)
@@ -81,8 +80,17 @@ async function getOrCreateBranch(originBranchName,  branchName)
 }
 
 
-async function updateChangeLog(milestone, issueTitle, branchName, sender)
+async function updateChangeLog(milestone, issueTitle, branchName)
 {
+    let path="changelog.json",
+        fileContent = await octokit.repos.getContent({
+            owner: repositoryOwner,
+            repo: repositoryName,
+            path: path,
+        });
+
+    console.log(fileContent);
+
     if (changelog[milestone] !== undefined) {
         changelog[milestone].push(issueTitle);
     } else {
@@ -99,10 +107,11 @@ async function updateChangeLog(milestone, issueTitle, branchName, sender)
     octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
-        path: "changelog.json",
+        path: path,
         message: "update changelog.json",
         content: changelog,
-        branch: branchName
+        branch: branchName,
+        sha: 
     });
 }
 
