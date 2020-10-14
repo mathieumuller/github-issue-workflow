@@ -90,6 +90,7 @@ async function updateChangeLog(milestone, issueTitle, branchName)
         });
 
     if (changelog[milestone] !== undefined) {
+        console.log(changelog[milestone]);
         changelog[milestone].push(issueTitle);
     } else {
         changelog[milestone] = [issueTitle];
