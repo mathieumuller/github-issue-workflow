@@ -61,7 +61,12 @@ async function createPullRequest() {
 
 async function getOrCreateBranch(originBranchName,  branchName) 
 {
-    let targetBranch = await getBranch(branchName);
+    try {
+        let targetBranch = await getBranch(branchName);
+    } catch (error) {
+        console.log(error);
+    }
+
 
     // don't recreate an existing branch
     if (targetBranch.length > 0) {
