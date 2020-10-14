@@ -90,7 +90,6 @@ async function updateChangeLog(milestone, issueTitle, branchName)
         });
 
     if (changelog[milestone] !== undefined) {
-        console.log(changelog[milestone]);
         changelog[milestone].push(issueTitle);
     } else {
         changelog[milestone] = [issueTitle];
@@ -99,7 +98,7 @@ async function updateChangeLog(milestone, issueTitle, branchName)
     // reorder to changelogs by release name
     changelog = JSON.stringify(changelog, null, 2);
 
-    octokit.repos.createOrUpdateFileContents({
+    return await octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
         path: path,
