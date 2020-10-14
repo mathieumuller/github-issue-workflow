@@ -88,7 +88,7 @@ async function updateChangeLog(milestone, issueTitle, branchName, sender)
     } else {
         changelog[milestone] = [issueTitle];
     }
-    console.log(chagelog);
+    console.log(changelog);
     // reorder te changelogs by release name
     changelog = sortObjectByKeys(changelog);
 
