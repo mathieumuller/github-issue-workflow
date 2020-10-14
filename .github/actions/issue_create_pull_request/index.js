@@ -188,7 +188,7 @@ function stringToSlug (str) {
 function sortObjectByKeys(obj)
 {
     let sorted = {};
-    obj.keys.sort().forEach(function(key) {{
+    obj.keys.sort().forEach(function(key) {
         sorted[key] = obj.key;
     });
 
