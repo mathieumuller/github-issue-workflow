@@ -83,13 +83,11 @@ async function getOrCreateBranch(originBranchName,  branchName)
 async function updateChangeLog(milestone, issueTitle, branchName)
 {
     let path="changelog.json",
-        fileContent = await octokit.repos.getContent({
+        {data: file} = await octokit.repos.getContent({
             owner: repositoryOwner,
             repo: repositoryName,
             path: path,
         });
-
-    console.log(fileContent);
 
     if (changelog[milestone] !== undefined) {
         changelog[milestone].push(issueTitle);
@@ -97,12 +95,8 @@ async function updateChangeLog(milestone, issueTitle, branchName)
         changelog[milestone] = [issueTitle];
     }
 
-    // reorder te changelogs by release name
-    console.log(changelog);
-    // changelog = sortObjectByKeys(changelog);
-    // console.log(changelog);
+    // reorder to changelogs by release name
     changelog = JSON.stringify(changelog, null, 2);
-    console.log(changelog);
 
     octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
@@ -111,7 +105,7 @@ async function updateChangeLog(milestone, issueTitle, branchName)
         message: "update changelog.json",
         content: changelog,
         branch: branchName,
-        //sha: 
+        sha: file.sha
     });
 }
 
@@ -198,13 +192,4 @@ function stringToSlug (str) {
     return str;
 }
 
-function sortObjectByKeys(obj)
-{
-    let sorted = {};
-    Object.keys(obj).sort().forEach(function(key) {
-        sorted[key] = obj.key;
-    });
-
-    return sorted;
-}
 
