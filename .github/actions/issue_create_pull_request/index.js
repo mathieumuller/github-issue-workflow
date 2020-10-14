@@ -35,9 +35,9 @@ async function createPullRequest() {
         originBranchName = "release/"+milestone;
 
     // get or create the pull request branch
-    getOrCreateBranch(originBranchName, branchName);
+    await getOrCreateBranch(originBranchName, branchName);
     // create a new entr in the changelog file
-    updateChangeLog(milestone, issue.title, branchName);
+    await updateChangeLog(milestone, issue.title, branchName);
 
     // complete the pull reuest name with the tags
     if (labels.expert.length > 0)
