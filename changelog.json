@@ -1,5 +1,5 @@
 {
-    "toto": {
-        "tata": "titi"
-    }
+    "v1.0.0":[
+        "change toto to tata"
+    ]
 }

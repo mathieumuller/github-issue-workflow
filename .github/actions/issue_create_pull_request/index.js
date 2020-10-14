@@ -11,8 +11,9 @@ const core = require('@actions/core'),
     expertLabelPrefix = core.getInput('expertLabelPrefix'),
     labelToListen = core.getInput('labelToListen'),
     projectCard = payload.project_card,
-    issueNumber = basename(projectCard.content_url),
-    changelog = require("../../../changelog.json");
+    issueNumber = basename(projectCard.content_url);
+
+let changelog = require("../../../changelog.json");
 
 try {
     createPullRequest();
@@ -27,17 +28,24 @@ async function createPullRequest() {
     }
     
     let issue = await getIssue(),
-    author = payload.sender,
-    milestone = issue.milestone.title,
-    subject = stringToSlug(issue.title),
-    labels = await getLabels(),
-    branchName = [labels.type, milestone, subject].join('/'),
-    pullRequestName = '['+labels.expert+'] '+ issue.title
-    originBranchName = "release/"+milestone;
+        labels = await getLabels(),
+        milestone = issue.milestone.title,
+        branchName = [labels.type, milestone, stringToSlug(issue.title)].join('/'),
+        pullRequestName = issue.title,
+        originBranchName = "release/"+milestone;
 
-    createBranch(branchName, originBranchName);
-    updateChangeLog(milestone, issue.title, branchName, author);
+    // get or create the pull request branch
+    getOrCreateBranch(originBranchName, branchName);
+    // create a new entr in the changelog file
+    updateChangeLog(milestone, issue.title, branchName);
 
+    // complete the pull reuest name with the tags
+    if (labels.expert.length > 0)
+    {
+        pullRequestName = '[' + labels.expert + '] '+pullRequestName;
+    }
+
+    // creates the pull request
     octokit.pulls.create({
         owner: repositoryOwner,
         repo: repositoryName,
@@ -48,45 +56,56 @@ async function createPullRequest() {
       });
 }
 
-async function createBranch(originBranchName,  branchName) 
+async function getOrCreateBranch(originBranchName,  branchName) 
 {
-    let { data: originBranch } = await getBranch(originBranchName),
-        originSha = originBranch.sha;
+    let targetBranch = await getBranch(branchName);
 
-    let {object: newBranch } = await octokit.git.createRef({
-      owner: repositoryOwner,
-      repo: repositoryName,
-      ref: branchName,
-      originSha,
-    });
+    // don't recreate an existing branch
+    if (targetBranch.length > 0) {
+        let originBranch = await getBranch(originBranchName),
+        originSha = originBranch.commit.sha;
 
-    return newBranch;
+        let response = await octokit.git.createRef({
+            owner: repositoryOwner,
+            repo: repositoryName,
+            ref: "refs/heads/"+branchName,
+            sha: originSha,
+        });
+
+        targetBranch = response.object;
+    
+    }
+    
+    return targetBranch;
 }
 
 
-async function updateChangeLog(milestone, issueTitle, branchName, sender)
+async function updateChangeLog(milestone, issueTitle, branchName)
 {
-    relaseChangeLog = {
-        milestone: (changelog[milestone] ?? []).push(issueTitle) 
-    };
+    let path="changelog.json",
+        {data: file} = await octokit.repos.getContent({
+            owner: repositoryOwner,
+            repo: repositoryName,
+            path: path,
+        });
 
-    changelog = Object.assign(changelog, relaseChangeLog);
+    if (changelog[milestone] !== undefined) {
+        changelog[milestone].push(issueTitle);
+    } else {
+        changelog[milestone] = [issueTitle];
+    }
 
-    octokit.repos.createOrUpdateFileContents({
+    // reorder to changelogs by release name
+    changelog = JSON.stringify(changelog, null, 2);
+
+    return await octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
-        path: "changelog.json",
+        path: path,
         message: "update changelog.json",
         content: changelog,
         branch: branchName,
-        committer: {
-            name: sender.login,
-            email: sender.email,
-        },
-        author: {
-            name: sender.login,
-            email: sender.email,
-        }
+        sha: file.sha
     });
 }
 
@@ -118,15 +137,6 @@ async function hasLabel(label) {
     return labelExists;
 }
 
-// function addLabel(label) {
-//     octokit.issues.addLabels({
-//         owner: repositoryOwner,
-//         repo: repositoryName,
-//         issue_number: issueNumber,
-//         labels: [label]
-//     });
-// }
-
 async function getIssue()
  {
     let { data: issue } = await octokit.issues.get({
@@ -150,30 +160,15 @@ async function getLabels() {
     // and remove those with the 'State:' prefix
     currentLabels.forEach(function(currentLabel) {
         if (currentLabel.name.substring(0, typeLabelPrefix.length) === typeLabelPrefix) {
-            console.log('type');
             list = Object.assign(list, {'type': currentLabel.name.substring(typeLabelPrefix.length)});
         }
         if (currentLabel.name.substring(0, expertLabelPrefix.length) === expertLabelPrefix) {
-            console.log('expert');
             list = Object.assign(list, {'expert': currentLabel.name.substring(expertLabelPrefix.length)});
         }
     });
 
-    console.log(list);
-
     return list;
 }
-
-// async function removeLabel(label) {
-//     octokit.issues.removeLabel({
-//         owner: repositoryOwner,
-//         repo: repositoryName,
-//         issue_number: issueNumber,
-//         name: label
-//     });
-// }
-
-
 
 function basename(path) {
     return path.split('/').reverse()[0];
@@ -196,4 +191,5 @@ function stringToSlug (str) {
 
     return str;
 }
+
 
