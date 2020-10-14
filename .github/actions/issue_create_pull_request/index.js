@@ -99,7 +99,7 @@ async function updateChangeLog(milestone, issueTitle, branchName, sender)
     octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
-        path: "/changelog.json",
+        path: "changelog.json",
         message: "update changelog.json",
         content: changelog,
         branch: branchName
