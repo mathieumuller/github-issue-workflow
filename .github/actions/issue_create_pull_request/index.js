@@ -45,6 +45,9 @@ async function createPullRequest() {
         pullRequestName = '[' + labels.expert + '] '+pullRequestName;
     }
 
+    console.log("creates a pull request " + pullRequestName);
+    console.log("head "+branchName);
+    console.log("base "+originBranchName);
     // creates the pull request
     octokit.pulls.create({
         owner: repositoryOwner,
@@ -95,18 +98,19 @@ async function updateChangeLog(milestone, issueTitle, branchName)
         changelog[milestone] = [issueTitle];
     }
 
-    // reorder to changelogs by release name
-    changelog = JSON.stringify(changelog, null, 2);
-
-    return await octokit.repos.createOrUpdateFileContents({
+    console.log("update changelog.json");
+    console.log('branch '+branchName);
+    let response = await octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
         path: path,
         message: "update changelog.json",
-        content: changelog,
+        content:  JSON.stringify(changelog, null, 2),
         branch: branchName,
         sha: file.sha
     });
+
+    return response;
 }
 
 async function getBranch(name) {
