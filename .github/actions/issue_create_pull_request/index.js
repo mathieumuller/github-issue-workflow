@@ -13,7 +13,7 @@ const core = require('@actions/core'),
     projectCard = payload.project_card,
     issueNumber = basename(projectCard.content_url);
 
-    let changelog = require("../../../changelog.json");
+let changelog = require("../../../changelog.json");
 
 try {
     createPullRequest();
@@ -28,42 +28,56 @@ async function createPullRequest() {
     }
     
     let issue = await getIssue(),
-    author = payload.sender,
-    milestone = issue.milestone.title,
-    subject = stringToSlug(issue.title),
-    labels = await getLabels(),
-    branchName = [labels.type, milestone, subject].join('/'),
-    pullRequestName = '['+labels.expert+'] '+ issue.title,
-    originBranchName = "release/"+milestone;
+        labels = await getLabels(),
+        author = payload.sender,
+        milestone = issue.milestone.title,
+        branchName = [labels.type, milestone, stringToSlug(issue.title)].join('/'),
+        pullRequestName = issue.title,
+        originBranchName = "release/"+milestone;
 
-    //createBranch(originBranchName, branchName);
+    // get or create the pull request branch
+    getOrCreateBranch(originBranchName, branchName);
+    // create a new entr in the changelog file
     updateChangeLog(milestone, issue.title, branchName, author);
 
-    // octokit.pulls.create({
-    //     owner: repositoryOwner,
-    //     repo: repositoryName,
-    //     title: pullRequestName,
-    //     head: branchName,
-    //     base: originBranchName,
-    //     draft: 'yes'
-    //   });
+    // complete the pull reuest name with the tags
+    if (labels.expert.length > 0)
+    {
+        pullRequestName = '[' + labels.expert + '] '+pullRequestName;
+    }
+
+    // creates the pull request
+    octokit.pulls.create({
+        owner: repositoryOwner,
+        repo: repositoryName,
+        title: pullRequestName,
+        head: branchName,
+        base: originBranchName,
+        draft: 'yes'
+      });
 }
 
-async function createBranch(originBranchName,  branchName) 
+async function getOrCreateBranch(originBranchName,  branchName) 
 {
-    let originBranch = await getBranch(originBranchName),
+    let targetBranch = await getBranch(branchName);
+
+    // don't recreate an existing branch
+    if (targetBranch.length > 0) {
+        let originBranch = await getBranch(originBranchName),
         originSha = originBranch.commit.sha;
 
-    let response = await octokit.git.createRef({
-      owner: repositoryOwner,
-      repo: repositoryName,
-      ref: "refs/heads/"+branchName,
-      sha: originSha,
-    });
+        let response = await octokit.git.createRef({
+            owner: repositoryOwner,
+            repo: repositoryName,
+            ref: "refs/heads/"+branchName,
+            sha: originSha,
+        });
 
-    console.log(response);
-
-    return response.object;
+        targetBranch = response.object;
+    
+    }
+    
+    return targetBranch;
 }
 
 
@@ -75,24 +89,17 @@ async function updateChangeLog(milestone, issueTitle, branchName, sender)
         changelog[milestone] = [issueTitle];
     }
 
-    console.log(milestone, issueTitle, branchName, sender, changelog);
+    // reorder te changelogs by release name
+    changelog = sortObjectByKeys(changelog);
 
-    // octokit.repos.createOrUpdateFileContents({
-    //     owner: repositoryOwner,
-    //     repo: repositoryName,
-    //     path: "changelog.json",
-    //     message: "update changelog.json",
-    //     content: cl,
-    //     branch: branchName,
-    //     committer: {
-    //         name: sender.login,
-    //         email: sender.email,
-    //     },
-    //     author: {
-    //         name: sender.login,
-    //         email: sender.email,
-    //     }
-    // });
+    octokit.repos.createOrUpdateFileContents({
+        owner: repositoryOwner,
+        repo: repositoryName,
+        path: "changelog.json",
+        message: "update changelog.json",
+        content: changelog,
+        branch: branchName
+    });
 }
 
 async function getBranch(name) {
@@ -176,5 +183,15 @@ function stringToSlug (str) {
         .replace(/-+/g, '-'); // collapse dashes
 
     return str;
+}
+
+function sortObjectByKeys(obj)
+{
+    let sorted = {};
+    obj.keys.sort().forEach(function(key) {{
+        sorted[key] = obj.key;
+    });
+
+    return sorted;
 }
 
