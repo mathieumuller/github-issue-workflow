@@ -9,7 +9,6 @@ const core = require('@actions/core'),
     repositoryName = repository.split('/')[1],
     typeLabelPrefix = core.getInput('typeLabelPrefix'),
     expertLabelPrefix = core.getInput('expertLabelPrefix'),
-    labelToListen = core.getInput('labelToListen'),
     projectCard = payload.project_card,
     issueNumber = basename(projectCard.content_url);
 
@@ -22,22 +21,24 @@ try {
 }
 
 async function createPullRequest() {
-    // only create the pull request when the issue has "in progress" label
-    if (!hasLabel(labelToListen)) {
+    // only create the pull request when the issue has been moved into the "in progress" column
+    if(getColumnName() !== core.getInput('triggerColumn')) {
         return;
     }
     
+    console.log(payload.sender);
+    return;
     let issue = await getIssue(),
         labels = await getLabels(),
-        milestone = issue.milestone.title,
-        branchName = [labels.type, milestone, stringToSlug(issue.title)].join('/'),
+        milestoneTitle = issue.milestoneTitle.title,
+        branchName = [labels.type, stringToSlug(issue.title)].join('/'),
         pullRequestName = issue.title,
-        originBranchName = "release/"+milestone;
+        releaseBranchName = "release/"+milestoneTitle;
 
     // get or create the pull request branch
-    await getOrCreateBranch(originBranchName, branchName);
+    await getOrCreateBranch(releaseBranchName, branchName);
     // create a new entr in the changelog file
-    await updateChangeLog(milestone, issue.title, branchName);
+    await updateChangeLog(milestoneTitle, issue.title, branchName);
 
     // complete the pull request name with the tags
     if (labels.expert.length > 0)
@@ -51,12 +52,12 @@ async function createPullRequest() {
         repo: repositoryName,
         title: pullRequestName,
         head: branchName,
-        base: originBranchName,
+        base: releaseBranchName,
         draft: 'yes'
       });
 }
 
-async function getOrCreateBranch(originBranchName,  branchName) 
+async function getOrCreateBranch(releaseBranchName,  branchName) 
 {
     let targetBranch = null;
 
@@ -68,7 +69,7 @@ async function getOrCreateBranch(originBranchName,  branchName)
 
     // don't recreate an existing branch
     if (targetBranch === null) {
-        let originBranch = await getBranch(originBranchName),
+        let originBranch = await getBranch(releaseBranchName),
         originSha = originBranch.commit.sha;
 
         let response = await octokit.git.createRef({
@@ -86,7 +87,7 @@ async function getOrCreateBranch(originBranchName,  branchName)
 }
 
 
-async function updateChangeLog(milestone, issueTitle, branchName)
+async function updateChangeLog(milestoneTitle, issueTitle, branchName)
 {
     let path="changelog.json",
         {data: file} = await octokit.repos.getContent({
@@ -95,10 +96,10 @@ async function updateChangeLog(milestone, issueTitle, branchName)
             path: path,
         });
 
-    if (changelog[milestone] !== undefined) {
-        changelog[milestone].push(issueTitle);
+    if (changelog[milestoneTitle] !== undefined) {
+        changelog[milestoneTitle].push(issueTitle);
     } else {
-        changelog[milestone] = [issueTitle];
+        changelog[milestoneTitle] = [issueTitle];
     }
     
     let response = await octokit.repos.createOrUpdateFileContents({
@@ -206,4 +207,13 @@ function stringToSlug (str) {
     return str;
 }
 
+async function getColumnName() {
+    let columnId = projectCard.column_id;
+    
+    let { data: column } = await octokit.projects.getColumn({
+      column_id: columnId,
+    });
+
+    return column.name;
+}
 

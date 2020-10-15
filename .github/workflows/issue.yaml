@@ -17,14 +17,10 @@ jobs:
         npm install @actions/core 
         npm install @actions/github
 
-    - name: Update state label
-      uses: ./.github/actions/issue_update_state/ 
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Create the pull request
       uses: ./.github/actions/issue_create_pull_request/ 
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        triggerColumn: InProgress
     
  

@@ -8,14 +8,14 @@ inputs:
     description: 'The prefix for the "type" labels'
     required: false
     default: 'Type:'
-  labelToListen: 
-    description: 'The label that triggers the pull request creation'
-    required: false
-    default: 'State:InProgress'
   expertLabelPrefix:
     description: 'The prefix for the "expert" labels'
     required: false
     default: 'Expert:'
+  triggerColumn:
+    description: 'The column that triggers the branch creation and the pull request'
+    required: false
+    default: 'InProgress'
   
 runs:
   using: 'node12'
