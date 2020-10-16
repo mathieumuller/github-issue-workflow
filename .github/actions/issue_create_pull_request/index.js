@@ -1,6 +1,5 @@
-import * as tools from "../tools.js";
-
-const core = require('@actions/core'),
+const tools = require("../tools.js"),
+    core = require('@actions/core'),
     github = require('@actions/github'),
     token = core.getInput('token'),
     context = github.context,
