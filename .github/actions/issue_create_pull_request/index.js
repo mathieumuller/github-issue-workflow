@@ -23,9 +23,9 @@ try {
 async function createPullRequest() {
     // only create the pull request when the issue has been moved into the "in progress" column
     let columnName = await getColumnName();
-    if(columnName !== core.getInput('triggerColumn')) {
-        return;
-    }
+    // if(columnName !== core.getInput('triggerColumn')) {
+    //     return;
+    // }
     
     let issue = await getIssue(),
         labels = await getLabels(),
