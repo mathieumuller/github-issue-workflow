@@ -14,8 +14,9 @@ jobs:
 
     - name: Install required NPM dependencies
       run: |
-        npm install @actions/core 
-        npm install @actions/github
+        npm i @actions/core 
+        npm i @actions/github
+        npm i md-2-json
 
     - name: Create the pull request
       uses: ./.github/actions/issue_create_pull_request/ 

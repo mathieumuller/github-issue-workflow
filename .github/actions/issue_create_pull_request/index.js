@@ -1,6 +1,9 @@
+const { base64Decode } = require("../tools.js");
+
 const tools = require("../tools.js"),
     core = require('@actions/core'),
     github = require('@actions/github'),
+    md2json = require('md-2-json'),
     token = core.getInput('token'),
     context = github.context,
     octokit = github.getOctokit(token),
@@ -90,15 +93,8 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
 
 async function updateChangeLog(milestoneTitle, issueTitle, branchName)
 {
-    let path="changelog.json",
-        {data: file} = await octokit.repos.getContent({
-            owner: repositoryOwner,
-            repo: repositoryName,
-            path: path,
-        });
-
-    console.log(tools.base64Decode(file.content));
-    throw new Error(`ok`);
+    console.log(getChangelogJSONContent());
+    return;
 
     if (changelog[milestoneTitle] !== undefined) {
         changelog[milestoneTitle].push(issueTitle);
@@ -199,5 +195,17 @@ async function getColumnName() {
     });
 
     return column.name;
+}
+
+async function getChangelogJSONContent()
+{
+    let path="changelog.md",
+        {data: file} = await octokit.repos.getContent({
+            owner: repositoryOwner,
+            repo: repositoryName,
+            path: path,
+        });
+
+    return md2json.parse(base64Decode(file.content));
 }
 
