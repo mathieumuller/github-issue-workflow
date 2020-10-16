@@ -1,6 +1,5 @@
-require("../tools.js");
-
-const core = require('@actions/core'),
+const tools = require('../tools.js'),
+    core = require('@actions/core'),    
     github = require('@actions/github'),
     md2json = require('md-2-json'),
     token = core.getInput('token'),
@@ -13,7 +12,7 @@ const core = require('@actions/core'),
     typeLabelPrefix = core.getInput('typeLabelPrefix'),
     expertLabelPrefix = core.getInput('expertLabelPrefix'),
     projectCard = payload.project_card,
-    issueNumber = basename(projectCard.content_url);
+    issueNumber = tools.basename(projectCard.content_url);
 
 
 // let changelog = require("../../../changelog.json");
@@ -35,7 +34,7 @@ async function createPullRequest() {
     let issue = await getIssue(),
         labels = await getLabels(),
         milestoneTitle = issue.milestone.title,
-        branchName = [labels.type, stringToSlug(issue.title)].join('/'),
+        branchName = [labels.type, tools.stringToSlug(issue.title)].join('/'),
         pullRequestName = issue.title,
         releaseBranchName = "release/"+milestoneTitle;
 
@@ -104,7 +103,7 @@ async function updateChangeLog(milestoneTitle, issue, branchName)
         path: path,
         message: "update changelog.json",
         // content has to be base64 encoded
-        content: base64Encode(md2json.toMd(changelogJSON)),
+        content: tools.base64Encode(md2json.toMd(changelogJSON)),
         branch: branchName,
         sha: file.sha,
         committer: {
@@ -202,7 +201,7 @@ async function getChangelogJSONContent()
             path: path,
         });
 
-    return md2json.parse(base64Decode(file.content));
+    return md2json.parse(tools.base64Decode(file.content));
 }
 
 function getChangelogRaw(issue)
