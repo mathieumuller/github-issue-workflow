@@ -62,12 +62,15 @@ async function createPullRequest() {
         owner: repositoryOwner,
         repo: repositoryName,
         issue_number: pullRequest.number,
-        body: "author: @" + payload.sender.login,
+        body: "author: @" + payload.sender.login + "\n" + "issue: " + "[#" + issueNumber + "](" + issue.html_url + ")",
     });
 
     // transfer the issue labels on the PR
     labels.expert.push(issueType);
     addLabels(labels.expert, pullRequest.number);
+
+    // assign the author of the pull request
+    assign([payload.sender.login], pullRequest.number);
 }
 
 async function getOrCreateBranch(releaseBranchName,  branchName) 
@@ -216,7 +219,6 @@ function getChangelogRaw(issue)
 }
 
 function addLabels(labels, number) {
-    console.log(labels);
     octokit.issues.addLabels({
         owner: repositoryOwner,
         repo: repositoryName,
@@ -232,5 +234,14 @@ function cancel(message)
         position: payload.changes.column_id.from,
       });
     throw new Error(message);
+}
+
+function assign(assignees, number) {
+    octokit.issues.addAssignees({
+        owner: repositoryOwner,
+        repo: repositoryName,
+        issue_number: number,
+        assignees: assignee,
+    });
 }
 
