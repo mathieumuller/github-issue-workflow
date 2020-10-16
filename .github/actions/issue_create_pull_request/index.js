@@ -26,7 +26,6 @@ try {
 async function createPullRequest() {
     // only create the pull request when the issue has been moved into the "in progress" column
     let columnName = await getColumnName();
-    console.log(columnName, core.getInput('triggerColumn'));
     if(columnName !== core.getInput('triggerColumn')) {
         return;
     }
@@ -88,7 +87,12 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
 async function updateChangeLog(milestoneTitle, issue, branchName)
 {
     let path="changelog.md",
-        changelogJSON = await getMarkdownToJSONContent(path),
+        {data: file} = await octokit.repos.getContent({
+            owner: repositoryOwner,
+            repo: repositoryName,
+            path: path,
+        }),
+        changelogJSON = await getMarkdownToJSONContent(file.content),
         changelogRaw = getChangelogRaw(issue)
     ;
 
@@ -193,15 +197,9 @@ async function getColumnName() {
     return column.name;
 }
 
-async function getMarkdownToJSONContent(path)
+async function getMarkdownToJSONContent(content)
 {
-    let {data: file} = await octokit.repos.getContent({
-            owner: repositoryOwner,
-            repo: repositoryName,
-            path: path,
-        });
-
-    return md2json.parse(tools.base64Decode(file.content));
+    return md2json.parse(tools.base64Decode(content));
 }
 
 function getChangelogRaw(issue)
