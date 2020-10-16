@@ -27,7 +27,7 @@ async function createPullRequest() {
     let columnName = await getColumnName();
     console.log(columnName, auth);
     if(columnName !== core.getInput('triggerColumn')) {
-        console.log('proooooooocccccceeeeeeeeeeessssssssssssss';)
+        console.log('proooooooocccccceeeeeeeeeeessssssssssssss');
         return;
 
     }
