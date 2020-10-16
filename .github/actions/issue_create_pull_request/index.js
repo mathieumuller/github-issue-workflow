@@ -108,7 +108,7 @@ async function updateChangeLog(milestoneTitle, issue, branchName)
     if (changelogJSON[milestoneTitle] !== undefined) {
         changelogJSON[milestoneTitle].raw += changelogRaw;
     } else {
-        changelogJSON[milestoneTitle].raw = changelogRaw;
+        changelogJSON[milestoneTitle] = {raw: changelogRaw};
     }
     
     let response = await octokit.repos.createOrUpdateFileContents({
