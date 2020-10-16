@@ -29,7 +29,7 @@ async function createPullRequest() {
     
     let issue = await getIssue(),
         labels = await getLabels(),
-        milestoneTitle = issue.milestoneTitle.title,
+        milestoneTitle = issue.milestone.title,
         branchName = [labels.type, stringToSlug(issue.title)].join('/'),
         pullRequestName = issue.title,
         releaseBranchName = "release/"+milestoneTitle;
