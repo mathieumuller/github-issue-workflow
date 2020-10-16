@@ -27,7 +27,8 @@ async function createPullRequest() {
     if(columnName !== core.getInput('triggerColumn')) {
         return;
     }
-    console.log(columnName);
+    let auth = await octokit.users.getAuthenticated();
+    console.log(columnName, auth);
     return;
     let issue = await getIssue(),
         labels = await getLabels(),
