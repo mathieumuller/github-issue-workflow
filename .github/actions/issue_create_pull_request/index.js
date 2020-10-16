@@ -117,7 +117,7 @@ async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchN
     ;
 
     if (changelogJSON[milestoneTitle] !== undefined) {
-        changelogJSON[milestoneTitle].raw = changelogRaw + changelogJSON[milestoneTitle];
+        changelogJSON[milestoneTitle].raw = changelogJSON[milestoneTitle] += changelogRaw;
     } else {
         changelogJSON[milestoneTitle] = {raw: changelogRaw};
     }
@@ -241,7 +241,7 @@ function assign(assignees, number) {
         owner: repositoryOwner,
         repo: repositoryName,
         issue_number: number,
-        assignees: assignes,
+        assignees: assignees,
     });
 }
 
