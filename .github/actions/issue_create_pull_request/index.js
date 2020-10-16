@@ -14,9 +14,6 @@ const tools = require('../tools.js'),
     projectCard = payload.project_card,
     issueNumber = tools.basename(projectCard.content_url);
 
-
-// let changelog = require("../../../changelog.json");
-
 try {
     createPullRequest();
 } catch (error) {
@@ -29,11 +26,14 @@ async function createPullRequest() {
     if(columnName !== core.getInput('triggerColumn')) {
         return;
     }
+
+    getLabels();
+    return;
     
     let issue = await getIssue(),
         labels = await getLabels(),
         milestoneTitle = issue.milestone.title,
-        branchName = [labels.type, tools.stringToSlug(issue.title)].join('/'),
+        branchName = [labels.type.substring(typeLabelPrefix.length), tools.stringToSlug(issue.title)].join('/'),
         pullRequestName = issue.title,
         releaseBranchName = "release/"+milestoneTitle;
 
@@ -143,24 +143,6 @@ async function getBranch(name) {
     return branch;
 }
 
-
-async function hasLabel(label) {
-    let { data: currentLabels } = await octokit.issues.listLabelsOnIssue({
-        owner: repositoryOwner,
-        repo: repositoryName,
-        issue_number: issueNumber,
-    });
-
-    let labelExists = false;
-    currentLabels.forEach(function(currentLabel) {
-        if (currentLabel.name == label) {
-            labelExists = true;
-        }
-    });
-
-    return labelExists;
-}
-
 async function getIssue()
  {
     let { data: issue } = await octokit.issues.get({
@@ -184,17 +166,24 @@ async function getLabels() {
     // and remove those with the 'State:' prefix
     currentLabels.forEach(function(currentLabel) {
         if (currentLabel.name.substring(0, typeLabelPrefix.length) === typeLabelPrefix) {
-            list = Object.assign(list, {'type': currentLabel.name.substring(typeLabelPrefix.length)});
+            if(list.type != undefined) {
+                list.type = [currentLabel];
+            } else {
+                list.type.push(currentLabel);
+            }
         }
         if (currentLabel.name.substring(0, expertLabelPrefix.length) === expertLabelPrefix) {
-            list = Object.assign(list, {'expert': currentLabel.name.substring(expertLabelPrefix.length)});
+            if(list.expert != undefined) {
+                list.expert = [currentLabel];
+            } else {
+                list.expert.push(currentLabel);
+            }
         }
     });
+    console.log(list);
 
     return list;
 }
-
-
 
 async function getColumnName() {
     let columnId = projectCard.column_id;
@@ -221,5 +210,14 @@ function getChangelogRaw(issue)
         + payload.sender.login
         + ")\n"
     ;
+}
+
+function addLabel(labels) {
+    octokit.issues.addLabels({
+        owner: repositoryOwner,
+        repo: repositoryName,
+        issue_number: issueNumber,
+        labels: labels
+    });
 }
 
