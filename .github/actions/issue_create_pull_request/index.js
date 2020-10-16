@@ -2,20 +2,20 @@
 const core = require('@actions/core');
 
 console.log(core.getInput('token'));
-return 
-const core = require('@actions/core'),
-    github = require('@actions/github'),
-    token = core.getInput('token'),
-    context = github.context,
-    octokit = github.getOctokit(token),
-    payload = context.payload,
-    repository = process.env.GITHUB_REPOSITORY,
-    repositoryOwner = repository.split('/')[0],
-    repositoryName = repository.split('/')[1],
-    typeLabelPrefix = core.getInput('typeLabelPrefix'),
-    expertLabelPrefix = core.getInput('expertLabelPrefix'),
-    projectCard = payload.project_card,
-    issueNumber = basename(projectCard.content_url);
+return ;
+// const core = require('@actions/core'),
+//     github = require('@actions/github'),
+//     token = core.getInput('token'),
+//     context = github.context,
+//     octokit = github.getOctokit(token),
+//     payload = context.payload,
+//     repository = process.env.GITHUB_REPOSITORY,
+//     repositoryOwner = repository.split('/')[0],
+//     repositoryName = repository.split('/')[1],
+//     typeLabelPrefix = core.getInput('typeLabelPrefix'),
+//     expertLabelPrefix = core.getInput('expertLabelPrefix'),
+//     projectCard = payload.project_card,
+//     issueNumber = basename(projectCard.content_url);
 
 let changelog = require("../../../changelog.json");
 
