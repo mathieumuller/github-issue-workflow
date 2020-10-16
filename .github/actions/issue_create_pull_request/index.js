@@ -214,7 +214,7 @@ async function getChangelogJSONContent()
     return md2json.parse(base64Decode(file.content));
 }
 
-async function getChangelogRaw(issue)
+function getChangelogRaw(issue)
 {
     return "["
         + issue.title
