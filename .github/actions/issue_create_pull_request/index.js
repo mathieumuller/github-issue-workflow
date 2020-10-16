@@ -93,15 +93,18 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
 
 async function updateChangeLog(milestoneTitle, issueTitle, branchName)
 {
-    let changelogJSON = await getChangelogJSONContent();
+    let changelogJSON = await getChangelogJSONContent(),
+        changelogRaw = getChangelogRaw()
+    ;
+
+    if (changelogJSON[milestoneTitle] !== undefined) {
+        changelogJSON[milestoneTitle].raw += changelogRaw;
+    } else {
+        changelogJSON[milestoneTitle].raw = changelogRaw;
+    }
+
     console.log(changelogJSON);
     return;
-
-    if (changelog[milestoneTitle] !== undefined) {
-        changelog[milestoneTitle].push(issueTitle);
-    } else {
-        changelog[milestoneTitle] = [issueTitle];
-    }
     
     let response = await octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
@@ -109,7 +112,7 @@ async function updateChangeLog(milestoneTitle, issueTitle, branchName)
         path: path,
         message: "update changelog.json",
         // content has to be base64 encoded
-        content: Buffer.from(JSON.stringify(changelog, null, 2)).toString('base64'),
+        content: Buffer.from(JSON.stringify(changelogJSON, null, 2)).toString('base64'),
         branch: branchName,
         sha: file.sha,
         committer: {
@@ -208,5 +211,17 @@ async function getChangelogJSONContent()
         });
 
     return md2json.parse(base64Decode(file.content));
+}
+
+async function getChangelogRaw()
+{
+    return "["
+        + issue.title
+        + "]("
+        + issue.url  
+        + ") ("
+        + payload.sender.login
+        + ")\n"
+    ;
 }
 
