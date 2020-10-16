@@ -15,7 +15,7 @@ const tools = require('../tools.js'),
     issueNumber = tools.basename(projectCard.content_url);
 
 try {
-    console.log(projectCard);
+    console.log(payload);
     return;
     createPullRequest();
 } catch (error) {
