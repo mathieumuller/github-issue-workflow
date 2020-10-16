@@ -66,7 +66,7 @@ async function createPullRequest() {
     });
 
     // transfer the issue labels on the PR
-    addLabels((labels.expert || []).push(issueType), pullRequest.number);
+    addLabels(labels.expert.push(issueType), pullRequest.number);
 }
 
 async function getOrCreateBranch(releaseBranchName,  branchName) 
@@ -113,7 +113,7 @@ async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchN
     ;
 
     if (changelogJSON[milestoneTitle] !== undefined) {
-        changelogJSON[milestoneTitle].raw += changelogRaw;
+        changelogJSON[milestoneTitle].raw = changelogRaw + changelogJSON[milestoneTitle];
     } else {
         changelogJSON[milestoneTitle] = {raw: changelogRaw};
     }
@@ -168,7 +168,7 @@ async function getLabels() {
         repo: repositoryName,
         issue_number: issueNumber
     }),
-    list = {};
+    list = {expert: []};
 
     // and remove those with the 'State:' prefix
     currentLabels.forEach(function(currentLabel) {
@@ -180,11 +180,7 @@ async function getLabels() {
             }
         }
         if (currentLabel.name.substring(0, expertLabelPrefix.length) === expertLabelPrefix) {
-            if(list.expert == undefined) {
-                list.expert = [currentLabel.name];
-            } else {
-                list.expert.push(currentLabel.name);
-            }
+            list.expert.push(currentLabel.name);
         }
     });
 
