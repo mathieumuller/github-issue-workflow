@@ -1,23 +1,18 @@
+const core = require('@actions/core'),
+    github = require('@actions/github'),
+    token = core.getInput('token'),
+    context = github.context,
+    octokit = github.getOctokit(token),
+    payload = context.payload,
+    repository = process.env.GITHUB_REPOSITORY,
+    repositoryOwner = repository.split('/')[0],
+    repositoryName = repository.split('/')[1],
+    typeLabelPrefix = core.getInput('typeLabelPrefix'),
+    expertLabelPrefix = core.getInput('expertLabelPrefix'),
+    projectCard = payload.project_card,
+    issueNumber = basename(projectCard.content_url);
 
-const core = require('@actions/core');
-
-console.log(core.getInput('token'));
-return ;
-// const core = require('@actions/core'),
-//     github = require('@actions/github'),
-//     token = core.getInput('token'),
-//     context = github.context,
-//     octokit = github.getOctokit(token),
-//     payload = context.payload,
-//     repository = process.env.GITHUB_REPOSITORY,
-//     repositoryOwner = repository.split('/')[0],
-//     repositoryName = repository.split('/')[1],
-//     typeLabelPrefix = core.getInput('typeLabelPrefix'),
-//     expertLabelPrefix = core.getInput('expertLabelPrefix'),
-//     projectCard = payload.project_card,
-//     issueNumber = basename(projectCard.content_url);
-
-let changelog = require("../../../changelog.json");
+// let changelog = require("../../../changelog.json");
 
 try {
     createPullRequest();
@@ -27,16 +22,11 @@ try {
 
 async function createPullRequest() {
     // only create the pull request when the issue has been moved into the "in progress" column
-    //let auth = await octokit.users.getAuthenticated();
-    console.log(payload);
     let columnName = await getColumnName();
-    console.log(columnName);
     if(columnName !== core.getInput('triggerColumn')) {
-        console.log('proooooooocccccceeeeeeeeeeessssssssssssss');
         return;
-
     }
-    return;
+    
     let issue = await getIssue(),
         labels = await getLabels(),
         milestoneTitle = issue.milestoneTitle.title,
@@ -78,8 +68,8 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
 
     // don't recreate an existing branch
     if (targetBranch === null) {
-        let originBranch = await getBranch(releaseBranchName),
-        originSha = originBranch.commit.sha;
+        let releaseBranch = await getBranch(releaseBranchName),
+        originSha = releaseBranch.commit.sha;
 
         let response = await octokit.git.createRef({
             owner: repositoryOwner,
@@ -104,6 +94,9 @@ async function updateChangeLog(milestoneTitle, issueTitle, branchName)
             repo: repositoryName,
             path: path,
         });
+
+    console.log(file);
+    throw new Error(`ok`);
 
     if (changelog[milestoneTitle] !== undefined) {
         changelog[milestoneTitle].push(issueTitle);

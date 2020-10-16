@@ -20,7 +20,7 @@ jobs:
     - name: Create the pull request
       uses: ./.github/actions/issue_create_pull_request/ 
       with:
-        token: ${{ secrets }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         triggerColumn: InProgress
     
  
