@@ -204,11 +204,11 @@ async function getMarkdownToJSONContent(content)
 
 function getChangelogRaw(issue)
 {
-    return "["
+    return "- ["
         + issue.title
         + "]("
-        + issue.url  
-        + ") ("
+        + issue.html_url  
+        + ") (@"
         + payload.sender.login
         + ")\n"
     ;
