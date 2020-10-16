@@ -44,14 +44,16 @@ async function createPullRequest() {
 
 
     // creates the pull request
-    octokit.pulls.create({
+    let response = await octokit.pulls.create({
         owner: repositoryOwner,
         repo: repositoryName,
         title: pullRequestName,
         head: branchName,
         base: releaseBranchName,
         draft: 'yes'
-      });
+    });
+
+    console.log(response);    
 }
 
 async function getOrCreateBranch(releaseBranchName,  branchName) 
