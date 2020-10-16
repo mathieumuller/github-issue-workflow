@@ -15,8 +15,6 @@ const tools = require('../tools.js'),
     issueNumber = tools.basename(projectCard.content_url);
 
 try {
-    console.log(payload);
-    return;
     createPullRequest();
 } catch (error) {
     core.setFailed(error.message);
@@ -232,7 +230,7 @@ function cancel(message)
 {
     octokit.projects.moveCard({
         card_id: projectCard.id,
-        position: projectCard.from,
+        position: payload.changes.column_id.from,
       });
     throw new Error(message);
 }
