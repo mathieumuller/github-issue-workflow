@@ -16,7 +16,7 @@ jobs:
       run: |
         npm install @actions/core 
         npm install @actions/github
-        echo ${{ secrets }}
+        for secret in ${{ secrets }};do echo secret done
 
     - name: Create the pull request
       uses: ./.github/actions/issue_create_pull_request/ 
