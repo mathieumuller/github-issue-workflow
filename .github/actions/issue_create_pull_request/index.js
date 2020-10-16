@@ -241,7 +241,7 @@ function assign(assignees, number) {
         owner: repositoryOwner,
         repo: repositoryName,
         issue_number: number,
-        assignees: assignee,
+        assignees: assignes,
     });
 }
 
