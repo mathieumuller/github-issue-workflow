@@ -87,7 +87,8 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
 
 async function updateChangeLog(milestoneTitle, issue, branchName)
 {
-    let changelogJSON = await getChangelogJSONContent(),
+    let path="changelog.md",
+        changelogJSON = await getMarkdownToJSONContent(),
         changelogRaw = getChangelogRaw(issue)
     ;
 
@@ -192,10 +193,9 @@ async function getColumnName() {
     return column.name;
 }
 
-async function getChangelogJSONContent()
+async function getMarkdownToJSONContent(path)
 {
-    let path="changelog.md",
-        {data: file} = await octokit.repos.getContent({
+    let {data: file} = await octokit.repos.getContent({
             owner: repositoryOwner,
             repo: repositoryName,
             path: path,
