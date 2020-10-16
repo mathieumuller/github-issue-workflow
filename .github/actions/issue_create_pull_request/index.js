@@ -93,7 +93,8 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
 
 async function updateChangeLog(milestoneTitle, issueTitle, branchName)
 {
-    console.log(getChangelogJSONContent());
+    let changelogJSON = await getChangelogJSONContent();
+    console.log(changelogJSON);
     return;
 
     if (changelog[milestoneTitle] !== undefined) {
