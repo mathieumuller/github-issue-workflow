@@ -88,7 +88,7 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
 async function updateChangeLog(milestoneTitle, issue, branchName)
 {
     let path="changelog.md",
-        changelogJSON = await getMarkdownToJSONContent(),
+        changelogJSON = await getMarkdownToJSONContent(path),
         changelogRaw = getChangelogRaw(issue)
     ;
 
