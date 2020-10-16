@@ -66,7 +66,8 @@ async function createPullRequest() {
     });
 
     // transfer the issue labels on the PR
-    addLabels(labels.expert.push(issueType), pullRequest.number);
+    labels.expert.push(issueType);
+    addLabels(labels.expert, pullRequest.number);
 }
 
 async function getOrCreateBranch(releaseBranchName,  branchName) 
@@ -215,6 +216,7 @@ function getChangelogRaw(issue)
 }
 
 function addLabels(labels, number) {
+    console.log(labels);
     octokit.issues.addLabels({
         owner: repositoryOwner,
         repo: repositoryName,
