@@ -43,7 +43,7 @@ async function createPullRequest() {
     // get or create the pull request branch
     await getOrCreateBranch(releaseBranchName, branchName);
     // create a new entr in the changelog file
-    await updateChangeLog(milestoneTitle, issue, branchName);
+    await updateChangeLog(milestoneTitle, issue, branchName, releaseBranchName);
 
 
     // creates the pull request
@@ -99,13 +99,14 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
 }
 
 
-async function updateChangeLog(milestoneTitle, issue, branchName)
+async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchName)
 {
     let path="changelog.md",
         {data: file} = await octokit.repos.getContent({
             owner: repositoryOwner,
             repo: repositoryName,
             path: path,
+            ref: releaseBranchName
         }),
         changelogJSON = await getMarkdownToJSONContent(file.content),
         changelogRaw = getChangelogRaw(issue)
