@@ -22,7 +22,7 @@ try {
 
 async function createPullRequest() {
     // only create the pull request when the issue has been moved into the "in progress" column
-    let auth = await octokit.users.getAuthenticated();
+    //let auth = await octokit.users.getAuthenticated();
     console.log(context);
     let columnName = await getColumnName();
     console.log(columnName, auth);
