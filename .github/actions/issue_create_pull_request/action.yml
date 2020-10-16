@@ -15,7 +15,7 @@ inputs:
   triggerColumn:
     description: 'The column that triggers the branch creation and the pull request'
     required: false
-    default: 'InProgress'
+    default: 'In progress'
   
 runs:
   using: 'node12'
