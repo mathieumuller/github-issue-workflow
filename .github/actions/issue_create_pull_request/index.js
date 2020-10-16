@@ -33,6 +33,8 @@ async function createPullRequest() {
     if (labels.type == undefined) {
         cancel('You must provide the Type:xxx label');
     }
+    console.log(labels);
+    return;
 
     let issueType = labels.type,
         milestoneTitle = issue.milestone.title,
