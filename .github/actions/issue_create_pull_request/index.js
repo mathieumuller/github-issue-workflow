@@ -42,7 +42,7 @@ async function createPullRequest() {
     // get or create the pull request branch
     // await getOrCreateBranch(releaseBranchName, branchName);
     // create a new entr in the changelog file
-    await updateChangeLog(milestoneTitle, issue.title, branchName);
+    await updateChangeLog(milestoneTitle, issue, branchName);
 
     // complete the pull request name with the tags
     if (labels.expert.length > 0)
@@ -91,7 +91,7 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
 }
 
 
-async function updateChangeLog(milestoneTitle, issueTitle, branchName)
+async function updateChangeLog(milestoneTitle, issue, branchName)
 {
     let changelogJSON = await getChangelogJSONContent(),
         changelogRaw = getChangelogRaw()
