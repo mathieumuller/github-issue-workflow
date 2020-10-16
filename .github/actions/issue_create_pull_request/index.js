@@ -106,7 +106,7 @@ async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchN
             owner: repositoryOwner,
             repo: repositoryName,
             path: path,
-            ref: releaseBranchName
+            ref: "refs/heads/"+releaseBranchName
         }),
         changelogJSON = await getMarkdownToJSONContent(file.content),
         changelogRaw = getChangelogRaw(issue)
