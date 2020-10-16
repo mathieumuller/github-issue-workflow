@@ -44,7 +44,7 @@ async function createPullRequest() {
 
 
     // creates the pull request
-    let response = await octokit.pulls.create({
+    let { data: pullRequest } = await octokit.pulls.create({
         owner: repositoryOwner,
         repo: repositoryName,
         title: pullRequestName,
@@ -53,7 +53,14 @@ async function createPullRequest() {
         draft: 'yes'
     });
 
-    console.log(response);    
+
+    // as the pull request is created by the github bot, we set the author into a comment
+    octokit.issues.createComment({
+        owner: repositoryOwner,
+        repo: repositoryName,
+        issue_number: pullRequest.number,
+        body: "author: @" + payload.sender.login,
+    });
 }
 
 async function getOrCreateBranch(releaseBranchName,  branchName) 
