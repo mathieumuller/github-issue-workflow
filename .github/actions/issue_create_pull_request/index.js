@@ -15,6 +15,8 @@ const tools = require('../tools.js'),
     issueNumber = tools.basename(projectCard.content_url);
 
 try {
+    console.log(projectCard);
+    return;
     createPullRequest();
 } catch (error) {
     core.setFailed(error.message);
@@ -28,9 +30,15 @@ async function createPullRequest() {
     }
     
     let issue = await getIssue(),
-        labels = await getLabels(),
+        labels = await getLabels();
+
+    if (labels.type == undefined) {
+        cancel('You must provide the Type:xxx label');
+    }
+
+    let issueType = labels.type,
         milestoneTitle = issue.milestone.title,
-        branchName = [labels.type[0].substring(typeLabelPrefix.length), tools.stringToSlug(issue.title)].join('/'),
+        branchName = [issueType.substring(typeLabelPrefix.length), tools.stringToSlug(issue.title)].join('/'),
         pullRequestName = issue.title,
         releaseBranchName = "release/"+milestoneTitle;
 
@@ -60,7 +68,7 @@ async function createPullRequest() {
     });
 
     // transfer the issue labels on the PR
-    addLabels(labels.type.concat(labels.expert || []), pullRequest.number);
+    addLabels((labels.expert || []).push(issueType), pullRequest.number);
 }
 
 async function getOrCreateBranch(releaseBranchName,  branchName) 
@@ -167,7 +175,7 @@ async function getLabels() {
     currentLabels.forEach(function(currentLabel) {
         if (currentLabel.name.substring(0, typeLabelPrefix.length) === typeLabelPrefix) {
             if(list.type == undefined) {
-                list.type = [currentLabel];
+                list.type = currentLabel;
             } else {
                 list.type.push(currentLabel);
             }
@@ -218,5 +226,14 @@ function addLabels(labels, number) {
         issue_number: number,
         labels: labels
     });
+}
+
+function cancel(message)
+{
+    octokit.projects.moveCard({
+        card_id: projectCard.id,
+        position: projectCard.from,
+      });
+    throw new Error(message);
 }
 
