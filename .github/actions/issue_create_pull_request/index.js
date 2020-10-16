@@ -26,14 +26,11 @@ async function createPullRequest() {
     if(columnName !== core.getInput('triggerColumn')) {
         return;
     }
-
-    getLabels();
-    return;
     
     let issue = await getIssue(),
         labels = await getLabels(),
         milestoneTitle = issue.milestone.title,
-        branchName = [labels.type.substring(typeLabelPrefix.length), tools.stringToSlug(issue.title)].join('/'),
+        branchName = [labels.type[0].substring(typeLabelPrefix.length), tools.stringToSlug(issue.title)].join('/'),
         pullRequestName = issue.title,
         releaseBranchName = "release/"+milestoneTitle;
 
@@ -61,6 +58,9 @@ async function createPullRequest() {
         issue_number: pullRequest.number,
         body: "author: @" + payload.sender.login,
     });
+
+    // transfer the issue labels on the PR
+    addLabels(labels.type.concat(labels.expert || []), pullRequest.number);
 }
 
 async function getOrCreateBranch(releaseBranchName,  branchName) 
@@ -180,7 +180,6 @@ async function getLabels() {
             }
         }
     });
-    console.log(list);
 
     return list;
 }
@@ -212,11 +211,11 @@ function getChangelogRaw(issue)
     ;
 }
 
-function addLabel(labels) {
+function addLabels(labels, number) {
     octokit.issues.addLabels({
         owner: repositoryOwner,
         repo: repositoryName,
-        issue_number: issueNumber,
+        issue_number: number,
         labels: labels
     });
 }
