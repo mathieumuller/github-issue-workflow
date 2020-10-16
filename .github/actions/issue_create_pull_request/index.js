@@ -33,8 +33,6 @@ async function createPullRequest() {
     if (labels.type == undefined) {
         cancel('You must provide the Type:xxx label');
     }
-    console.log(labels);
-    return;
 
     let issueType = labels.type,
         milestoneTitle = issue.milestone.title,
@@ -175,16 +173,16 @@ async function getLabels() {
     currentLabels.forEach(function(currentLabel) {
         if (currentLabel.name.substring(0, typeLabelPrefix.length) === typeLabelPrefix) {
             if(list.type == undefined) {
-                list.type = currentLabel;
+                list.type = currentLabel.name;
             } else {
-                list.type.push(currentLabel);
+                list.type.push(currentLabel.name);
             }
         }
         if (currentLabel.name.substring(0, expertLabelPrefix.length) === expertLabelPrefix) {
             if(list.expert == undefined) {
-                list.expert = [currentLabel];
+                list.expert = [currentLabel.name];
             } else {
-                list.expert.push(currentLabel);
+                list.expert.push(currentLabel.name);
             }
         }
     });
