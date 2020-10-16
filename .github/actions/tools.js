@@ -1,8 +1,8 @@
-export function basename(path) {
+function basename(path) {
     return path.split('/').reverse()[0];
 }
 
-export function stringToSlug (str) {
+function stringToSlug (str) {
     str = str.replace(/^\s+|\s+$/g, ''); // trim
     str = str.toLowerCase();
   
@@ -20,12 +20,12 @@ export function stringToSlug (str) {
     return str;
 }
 
-export function base64Encode(content)
+function base64Encode(content)
 {
     return Buffer.from(content).toString('base64');
 }
 
-export function base64Decode(content)
+function base64Decode(content)
 {
     return Buffer.from(content, 'base64').toString('ascii');
 }
