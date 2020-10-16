@@ -22,6 +22,5 @@ jobs:
       uses: ./.github/actions/issue_create_pull_request/ 
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        triggerColumn: InProgress
     
  

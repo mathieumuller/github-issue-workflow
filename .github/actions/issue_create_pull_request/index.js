@@ -1,7 +1,6 @@
-const { base64Decode } = require("../tools.js");
+require("../tools.js");
 
-const tools = require("../tools.js"),
-    core = require('@actions/core'),
+const core = require('@actions/core'),
     github = require('@actions/github'),
     md2json = require('md-2-json'),
     token = core.getInput('token'),
@@ -14,7 +13,7 @@ const tools = require("../tools.js"),
     typeLabelPrefix = core.getInput('typeLabelPrefix'),
     expertLabelPrefix = core.getInput('expertLabelPrefix'),
     projectCard = payload.project_card,
-    issueNumber = tools.basename(projectCard.content_url);
+    issueNumber = basename(projectCard.content_url);
 
 
 // let changelog = require("../../../changelog.json");
@@ -27,28 +26,24 @@ try {
 
 async function createPullRequest() {
     // only create the pull request when the issue has been moved into the "in progress" column
-    // let columnName = await getColumnName();
-    // if(columnName !== core.getInput('triggerColumn')) {
-    //     return;
-    // }
+    let columnName = await getColumnName();
+    console.log(columnName, core.getInput('triggerColumn'));
+    if(columnName !== core.getInput('triggerColumn')) {
+        return;
+    }
     
     let issue = await getIssue(),
         labels = await getLabels(),
         milestoneTitle = issue.milestone.title,
-        branchName = [labels.type, tools.stringToSlug(issue.title)].join('/'),
+        branchName = [labels.type, stringToSlug(issue.title)].join('/'),
         pullRequestName = issue.title,
         releaseBranchName = "release/"+milestoneTitle;
 
     // get or create the pull request branch
-    // await getOrCreateBranch(releaseBranchName, branchName);
+    await getOrCreateBranch(releaseBranchName, branchName);
     // create a new entr in the changelog file
     await updateChangeLog(milestoneTitle, issue, branchName);
 
-    // complete the pull request name with the tags
-    if (labels.expert.length > 0)
-    {
-        pullRequestName = '[' + labels.expert + '] '+pullRequestName;
-    }
 
     // creates the pull request
     octokit.pulls.create({
@@ -93,7 +88,6 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
 
 async function updateChangeLog(milestoneTitle, issue, branchName)
 {
-    console.log(issue);
     let changelogJSON = await getChangelogJSONContent(),
         changelogRaw = getChangelogRaw(issue)
     ;
@@ -103,9 +97,6 @@ async function updateChangeLog(milestoneTitle, issue, branchName)
     } else {
         changelogJSON[milestoneTitle].raw = changelogRaw;
     }
-
-    console.log(changelogJSON);
-    return;
     
     let response = await octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
@@ -113,7 +104,7 @@ async function updateChangeLog(milestoneTitle, issue, branchName)
         path: path,
         message: "update changelog.json",
         // content has to be base64 encoded
-        content: Buffer.from(JSON.stringify(changelogJSON, null, 2)).toString('base64'),
+        content: base64Encode(md2json.toMd(changelogJSON)),
         branch: branchName,
         sha: file.sha,
         committer: {
