@@ -166,14 +166,14 @@ async function getLabels() {
     // and remove those with the 'State:' prefix
     currentLabels.forEach(function(currentLabel) {
         if (currentLabel.name.substring(0, typeLabelPrefix.length) === typeLabelPrefix) {
-            if(list.type != undefined) {
+            if(list.type == undefined) {
                 list.type = [currentLabel];
             } else {
                 list.type.push(currentLabel);
             }
         }
         if (currentLabel.name.substring(0, expertLabelPrefix.length) === expertLabelPrefix) {
-            if(list.expert != undefined) {
+            if(list.expert == undefined) {
                 list.expert = [currentLabel];
             } else {
                 list.expert.push(currentLabel);
