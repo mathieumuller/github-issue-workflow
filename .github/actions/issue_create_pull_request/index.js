@@ -231,7 +231,7 @@ function cancel(message)
 {
     octokit.projects.moveCard({
         card_id: projectCard.id,
-        position: "after:"+payload.changes.column_id.from,
+        position: '"'+payload.changes.column_id.from+'"',
       });
     throw new Error(message);
 }
