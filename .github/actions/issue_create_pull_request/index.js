@@ -26,16 +26,26 @@ async function createPullRequest() {
     if(columnName !== core.getInput('triggerColumn')) {
         return;
     }
-    
-    let issue = await getIssue(),
-        labels = await getLabels();
 
-    if (labels.type == undefined) {
+    // an issue has to be associated to the project card to continue
+    let issue = await getIssue();
+    if (issue == undefined) {
+        cancel('You must associate an issue to the project card!');
+    }
+
+    if (issue.milestone == undefined) {
+        cancel('You must associate a milestone to the issue of the project card!');
+    }
+    
+    let labels = await getLabels()
+        issueType = labels.type;
+
+    // if label type is not provided -> cancel the action
+    if (issueType == undefined) {
         cancel('You must provide the Type:xxx label');
     }
 
-    let issueType = labels.type,
-        milestoneTitle = issue.milestone.title,
+    let milestoneTitle = issue.milestone.title,
         branchName = [issueType.substring(typeLabelPrefix.length), tools.stringToSlug(issue.title)].join('/'),
         pullRequestName = issue.title,
         releaseBranchName = "release/"+milestoneTitle;
@@ -45,8 +55,7 @@ async function createPullRequest() {
     // create a new entr in the changelog file
     await updateChangeLog(milestoneTitle, issue, branchName, releaseBranchName);
 
-
-    // creates the pull request
+    // creates the draft pull request
     let { data: pullRequest } = await octokit.pulls.create({
         owner: repositoryOwner,
         repo: repositoryName,
@@ -58,6 +67,7 @@ async function createPullRequest() {
 
 
     // as the pull request is created by the github bot, we set the author into a comment
+    // as it's impossible to link an issue through github api, we add a link into a comment
     octokit.issues.createComment({
         owner: repositoryOwner,
         repo: repositoryName,
@@ -73,6 +83,11 @@ async function createPullRequest() {
     assign([payload.sender.login], pullRequest.number);
 }
 
+/**
+ * Get the branch corresponding to the issue name or create it
+ * @param {string} releaseBranchName 
+ * @param {string} branchName 
+ */
 async function getOrCreateBranch(releaseBranchName,  branchName) 
 {
     let targetBranch = null;
@@ -102,9 +117,16 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
     return targetBranch;
 }
 
-
+/**
+ * Update the changelog file to be able to create an empty pull request for the created branch
+ * @param {string} milestoneTitle 
+ * @param {object} issue 
+ * @param {string} branchName 
+ * @param {string} releaseBranchName 
+ */
 async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchName)
 {
+    // Get the current content of the file on the target branch
     let path="changelog.md",
         {data: file} = await octokit.repos.getContent({
             owner: repositoryOwner,
@@ -112,16 +134,20 @@ async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchN
             path: path,
             ref: "refs/heads/"+releaseBranchName
         }),
+        // convert the content into json
         changelogJSON = await getMarkdownToJSONContent(file.content),
+        // create the new entry to add to the changelog
         changelogRaw = getChangelogRaw(issue)
     ;
 
+    // Add the new content at the appropriate position (depending on the issue milestone)
     if (changelogJSON[milestoneTitle] !== undefined) {
         changelogJSON[milestoneTitle].raw = changelogJSON[milestoneTitle] += changelogRaw;
     } else {
         changelogJSON[milestoneTitle] = {raw: changelogRaw};
     }
     
+    // push the commit to the given branch 
     let response = await octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
@@ -144,6 +170,10 @@ async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchN
     return response;
 }
 
+/**
+ * Get a branch by its name
+ * @param {string} name 
+ */
 async function getBranch(name) {
     let { data: branch } = await octokit.repos.getBranch({
         owner: repositoryOwner,
@@ -154,6 +184,9 @@ async function getBranch(name) {
     return branch;
 }
 
+/**
+ * Get the issueof the project card
+ */
 async function getIssue()
  {
     let { data: issue } = await octokit.issues.get({
@@ -165,6 +198,9 @@ async function getIssue()
       return issue;
  }
 
+/**
+ * Get the issue labels (type + expert) as an associative array
+ */
 async function getLabels() {
     // get all the current labels of the issue
     let { data: currentLabels } = await octokit.issues.listLabelsOnIssue({
@@ -191,6 +227,9 @@ async function getLabels() {
     return list;
 }
 
+/**
+ * Retrieve the column name by its id
+ */
 async function getColumnName() {
     let columnId = projectCard.column_id;
     
@@ -201,11 +240,19 @@ async function getColumnName() {
     return column.name;
 }
 
+/**
+ * Decode the github content and parse it into a json object
+ * @param {string} content 
+ */
 async function getMarkdownToJSONContent(content)
 {
     return md2json.parse(tools.base64Decode(content));
 }
 
+/**
+ * Build the content to add to the changelog 
+ * @param {object} issue 
+ */
 function getChangelogRaw(issue)
 {
     return "- ["
@@ -218,6 +265,11 @@ function getChangelogRaw(issue)
     ;
 }
 
+/**
+ * Add many labels to an issue
+ * @param {array} labels 
+ * @param {integer} number 
+ */
 function addLabels(labels, number) {
     octokit.issues.addLabels({
         owner: repositoryOwner,
@@ -227,16 +279,25 @@ function addLabels(labels, number) {
     });
 }
 
+/**
+ * Cancel the current action and move the project card back to its original column
+ * @param {string} message 
+ */
 function cancel(message)
 {
     octokit.projects.moveCard({
         card_id: projectCard.id,
-        position: "bottom",
+        position: "top",
         column_id: payload.changes.column_id.from,
       });
     throw new Error(message);
 }
 
+/**
+ * Assigne many collaborators to the given issue
+ * @param {array} assignees 
+ * @param {integer} number 
+ */
 function assign(assignees, number) {
     octokit.issues.addAssignees({
         owner: repositoryOwner,
