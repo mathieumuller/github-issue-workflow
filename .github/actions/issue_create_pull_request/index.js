@@ -142,7 +142,7 @@ async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchN
 
     // Add the new content at the appropriate position (depending on the issue milestone)
     if (changelogJSON[milestoneTitle] !== undefined) {
-        changelogJSON[milestoneTitle].raw = changelogJSON[milestoneTitle] += changelogRaw;
+        changelogJSON[milestoneTitle].raw += changelogRaw;
     } else {
         changelogJSON[milestoneTitle] = {raw: changelogRaw};
     }
