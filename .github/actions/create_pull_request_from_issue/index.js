@@ -70,14 +70,7 @@ async function process() {
         title: pullRequestName,
         head: branchName,
         base: config.mainBranch,
-        draft: 'yes'
-    });
-
-    // comments the pull request to link it to the issue
-    await octokit.pulls.update({
-        owner: repositoryOwner,
-        repo: repositoryName,
-        pull_number: pullRequest.number,
+        draft: 'yes',
         body: "resolves #"+issue.number
     });
     
