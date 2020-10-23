@@ -1,0 +1,10 @@
+name: 'create-child-pull-request'
+description: 'Creates an empty pull request from the parent one'
+inputs:
+  token:
+    description: 'The repository authentication token'
+    required: true
+
+runs:
+  using: 'node12'
+  main: 'index.js' 

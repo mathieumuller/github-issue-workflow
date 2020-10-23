@@ -1,0 +1,26 @@
+name: Creates an empty pull request from another one
+
+on:
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  create_child_pull_request:
+    if: startsWith(github.event.comment.body, '--child') 
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Setup Github Actions
+      uses: actions/checkout@v2
+
+    - name: Install required NPM dependencies
+      run: |
+        npm i @actions/core 
+        npm i @actions/github
+        npm i md-2-json
+
+    - name: Create a child pull request from the current one
+      uses: ./.github/actions/create_child_pull_request/ 
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
