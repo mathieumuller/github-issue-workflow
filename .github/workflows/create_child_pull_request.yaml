@@ -1,11 +1,12 @@
-name: Creates an empty pull request from an issue
+name: Creates an empty pull request from another one
 
 on:
-  project_card:
-    types: [moved]
+  pull_request_review_comment:
+    types: [created]
 
 jobs:
-  create_pull_request: 
+  create_child_pull_request:
+    if: startsWith(github.event.comment.body, '--child') 
     runs-on: ubuntu-latest
     
     steps:
@@ -17,8 +18,9 @@ jobs:
         npm i @actions/core 
         npm i @actions/github
         npm i md-2-json
-    - name: Create a pull request from the issue
-      uses: ./.github/actions/create_pull_request_from_issue/ 
+
+    - name: Create a child pull request from the current one
+      uses: ./.github/actions/create_child_pull_request/ 
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
     
