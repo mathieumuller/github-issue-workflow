@@ -218,6 +218,7 @@ async function getBranch(name) {
  */
 async function getIssue()
  {
+     console.log(issueNumber);
     let { data: issue } = await octokit.issues.get({
         owner: repositoryOwner,
         repo: repositoryName,
