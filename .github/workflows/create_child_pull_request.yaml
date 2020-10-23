@@ -2,6 +2,7 @@ name: Creates an empty pull request from another one
 
 on:
   pull_request:
+    type: [labeled, assigned, edited]
 
 jobs:
   create_child_pull_request:
