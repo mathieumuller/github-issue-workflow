@@ -59,4 +59,5 @@ module.exports = {
     },
     columnTriggeringPullRequest: 'In Progress',
     issueTypesTriggeringPullRequest: ['Type:Feature', 'Type:Bug'],
+    mainBranch: 'master'
 }

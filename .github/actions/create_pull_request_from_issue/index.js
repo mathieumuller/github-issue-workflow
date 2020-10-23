@@ -69,7 +69,7 @@ async function process() {
         repo: repositoryName,
         title: pullRequestName,
         head: branchName,
-        base: 'dev',
+        base: config.mainBranch,
         draft: 'yes'
     });
 
