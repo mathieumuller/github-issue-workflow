@@ -1,8 +1,7 @@
 name: Creates an empty pull request from another one
 
 on:
-  issue_comment:
-    types: [created]
+  pull_request:
 
 jobs:
   create_child_pull_request:

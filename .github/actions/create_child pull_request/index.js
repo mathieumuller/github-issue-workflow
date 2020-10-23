@@ -7,4 +7,5 @@ const tools = require('../tools.js'),
     octokit = github.getOctokit(token),
     payload = context.payload;
 
+console.log(context);
 console.log(payload);
