@@ -7,8 +7,8 @@ const tools = require('../tools.js'),
     context = github.context,
     octokit = github.getOctokit(token),
     payload = context.payload,
-    repositoryOwner = config.repositoryName,
-    repositoryName = config.repositoryOwner,
+    repositoryOwner = config.repositorOwner,
+    repositoryName = config.repositoryName,
     typeLabelPrefix = config.labelPrefixType,
     expertLabelPrefix = config.labelPrefixExpert,
     projectCard = payload.project_card,
@@ -218,7 +218,6 @@ async function getBranch(name) {
  */
 async function getIssue()
  {
-     console.log(issueNumber);
     let { data: issue } = await octokit.issues.get({
         owner: repositoryOwner,
         repo: repositoryName,
