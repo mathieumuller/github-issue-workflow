@@ -1,11 +1,11 @@
-name: Process the issue workflow
+name: Creates an empty pull request from an issue
 
 on:
   project_card:
     types: [moved]
 
 jobs:
-  update_label: 
+  create_pull_request: 
     runs-on: ubuntu-latest
     
     steps:
@@ -17,10 +17,8 @@ jobs:
         npm i @actions/core 
         npm i @actions/github
         npm i md-2-json
-
-    - name: Create the pull request
-      uses: ./.github/actions/issue_create_pull_request/ 
+    - name: Create a pull request from the issue
+      uses: ./.github/actions/create_pull_request_from_issue/ 
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
     
- 

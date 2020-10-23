@@ -1,4 +1,5 @@
 const tools = require('../tools.js'),
+    config = require('../config.js'),    
     core = require('@actions/core'),    
     github = require('@actions/github'),
     md2json = require('md-2-json'),
@@ -6,24 +7,23 @@ const tools = require('../tools.js'),
     context = github.context,
     octokit = github.getOctokit(token),
     payload = context.payload,
-    repository = process.env.GITHUB_REPOSITORY,
-    repositoryOwner = repository.split('/')[0],
-    repositoryName = repository.split('/')[1],
-    typeLabelPrefix = core.getInput('typeLabelPrefix'),
-    expertLabelPrefix = core.getInput('expertLabelPrefix'),
+    repositoryOwner = config.repositoryName,
+    repositoryName = config.repositoryOwner,
+    typeLabelPrefix = config.labelPrefixType,
+    expertLabelPrefix = config.labelPrefixExpert,
     projectCard = payload.project_card,
     issueNumber = tools.basename(projectCard.content_url);
 
 try {
-    createPullRequest();
+    process();
 } catch (error) {
     core.setFailed(error.message);
 }
 
-async function createPullRequest() {
+async function process() {
     // only create the pull request when the issue has been moved into the "in progress" column
     let columnName = await getColumnName();
-    if(columnName !== core.getInput('triggerColumn')) {
+    if(columnName !== config.columnTriggeringPullRequest) {
         return;
     }
 
@@ -36,8 +36,8 @@ async function createPullRequest() {
     if (issue.milestone == undefined) {
         cancel('You must associate a milestone to the issue of the project card!');
     }
-    
-    let labels = await getLabels()
+
+    let labels = await getLabels(),
         issueType = labels.type;
 
     // if label type is not provided -> cancel the action
@@ -45,34 +45,63 @@ async function createPullRequest() {
         cancel('You must provide the Type:xxx label');
     }
 
+    // do not create branch + pull request if not type feature or type bug
+    if (!config.issueTypesTriggeringPullRequest.includes(issueType)) {
+        return;
+    }
+
     let milestoneTitle = issue.milestone.title,
-        branchName = [issueType.substring(typeLabelPrefix.length), tools.stringToSlug(issue.title)].join('/'),
+        branchName = ([issueType.substring(typeLabelPrefix.length), tools.stringToSlug(issue.title)].join('/')).toLowerCase(),
         pullRequestName = issue.title,
-        releaseBranchName = "release/"+milestoneTitle;
+        releaseBranchName = "release/v"+milestoneTitle;
 
     // get or create the pull request branch
     await getOrCreateBranch(releaseBranchName, branchName);
-    // create a new entr in the changelog file
+    // create a new entry in the changelog file
     await updateChangeLog(milestoneTitle, issue, branchName, releaseBranchName);
 
-    // creates the draft pull request
+
+    // TRICKY ALERT!! 
+    // we have to create the draft pull request on dev and use the resolves keyword to link the PR and the issue
+    // then we have to update the pr base  to the release branch
     let { data: pullRequest } = await octokit.pulls.create({
         owner: repositoryOwner,
         repo: repositoryName,
         title: pullRequestName,
         head: branchName,
-        base: releaseBranchName,
+        base: 'dev',
         draft: 'yes'
+    });
+
+    // comments the pull request to link it to the issue
+    await octokit.pulls.update({
+        owner: repositoryOwner,
+        repo: repositoryName,
+        pull_number: pullRequest.number,
+        body: "resolves #"+issue.number
+    });
+    
+    // change the base of the pull request for the release branch
+    octokit.pulls.update({
+        owner: repositoryOwner,
+        repo: repositoryName,
+        pull_number: pullRequest.number,
+        base: releaseBranchName,
     });
 
 
     // as the pull request is created by the github bot, we set the author into a comment
     // as it's impossible to link an issue through github api, we add a link into a comment
+    let metadata = {
+        "github_metadata": {
+            "author": payload.sender.login
+        }
+    };
     octokit.issues.createComment({
         owner: repositoryOwner,
         repo: repositoryName,
         issue_number: pullRequest.number,
-        body: "author: @" + payload.sender.login + "\n" + "issue: " + "[#" + issueNumber + "](" + issue.html_url + ")",
+        body: JSON.stringify(metadata),
     });
 
     // transfer the issue labels on the PR
@@ -111,9 +140,9 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
         });
 
         targetBranch = response.object;
-    
+
     }
-    
+
     return targetBranch;
 }
 
@@ -146,13 +175,13 @@ async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchN
     } else {
         changelogJSON[milestoneTitle] = {raw: changelogRaw};
     }
-    
+
     // push the commit to the given branch 
     let response = await octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
         path: path,
-        message: "update changelog.json",
+        message: "update changelog.md",
         // content has to be base64 encoded
         content: tools.base64Encode(md2json.toMd(changelogJSON)),
         branch: branchName,
@@ -232,7 +261,7 @@ async function getLabels() {
  */
 async function getColumnName() {
     let columnId = projectCard.column_id;
-    
+
     let { data: column } = await octokit.projects.getColumn({
       column_id: columnId,
     });
@@ -306,4 +335,3 @@ function assign(assignees, number) {
         assignees: assignees,
     });
 }
-
