@@ -1,6 +1,6 @@
 module.exports = {
-    repositoryOwner: 'uppler',
-    repositoryName: 'uppler',
+    repositoryOwner: 'mathieumuller',
+    repositoryName: 'github-issue-workflow',
     // the prefix for experts labels
     labelPrefixExpert: 'Expert:',
     // the prefix for types labels
