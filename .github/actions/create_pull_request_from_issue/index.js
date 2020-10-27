@@ -138,7 +138,7 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
 async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchName)
 {
     // Get the current content of the file on the target branch
-    let path="changelog.md",
+    let path="changelog.json",
         {data: file} = await octokit.repos.getContent({
             owner: repositoryOwner,
             repo: repositoryName,
@@ -146,24 +146,19 @@ async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchN
             ref: "refs/heads/"+releaseBranchName
         }),
         // convert the content into json
-        changelogJSON = await getMarkdownToJSONContent(file.content),
+        changelogJSON = JSON.parse(file.content),
         // create the new entry to add to the changelog
-        changelogRaw = getChangelogRaw(issue)
+        changelogEntry = getChangelogEntry(issue, releaseBranchName)
     ;
 
-    // Add the new content at the appropriate position (depending on the issue milestone)
-    if (changelogJSON[milestoneTitle] !== undefined) {
-        changelogJSON[milestoneTitle].raw += changelogRaw;
-    } else {
-        changelogJSON[milestoneTitle] = {raw: changelogRaw};
-    }
+    changelogJSON.push(changelogEntry);
 
     // push the commit to the given branch 
     let response = await octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
         path: path,
-        message: "update changelog.md",
+        message: "update changelog.json",
         // content has to be base64 encoded
         content: tools.base64Encode(md2json.toMd(changelogJSON)),
         branch: branchName,
@@ -264,16 +259,12 @@ async function getMarkdownToJSONContent(content)
  * Build the content to add to the changelog 
  * @param {object} issue 
  */
-function getChangelogRaw(issue)
+function getChangelogEntry(issue, releaseBranchName)
 {
-    return "- ["
-        + issue.title
-        + "]("
-        + issue.html_url  
-        + ") (@"
-        + payload.sender.login
-        + ")\n"
-    ;
+    return {
+        "release": releaseBranchName,
+        "entry":  "[" + issue.title + "](" + issue.html_url  + ") (@" + payload.sender.login + ")"
+    };
 }
 
 /**

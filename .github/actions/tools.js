@@ -39,6 +39,6 @@ module.exports = {
 
     base64Decode: function(content)
     {
-        return Buffer.from(content, 'base64').toString('ascii');
+        return Buffer.from(content, 'base64').toString('utf8');
     }
 }
