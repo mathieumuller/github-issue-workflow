@@ -1,6 +1,6 @@
 module.exports = {
-    repositoryOwner: 'mathieumuller',
-    repositoryName: 'github-issue-workflow',
+    repositoryOwner: 'uppler',
+    repositoryName: 'uppler',
     // the prefix for experts labels
     labelPrefixExpert: 'Expert:',
     // the prefix for types labels
@@ -58,6 +58,5 @@ module.exports = {
         "search": "wirabelle",
     },
     columnTriggeringPullRequest: 'In Progress',
-    issueTypesTriggeringPullRequest: ['Type:Feature', 'Type:Bug'],
-    mainBranch: 'master'
+    issueTypesTriggeringPullRequest: ['Feature', 'Bug'],
 }

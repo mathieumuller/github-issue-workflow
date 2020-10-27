@@ -1,0 +1,104 @@
+name: Execute acceptance tests suite
+
+on:
+  pull_request:
+    types: [ labeled, ready_for_review ]
+
+jobs:
+  # --------------------------------------------------------------------------------------------------------  
+  # LAUNCH THE ACCEPTANCE TESTS AND REQUEST THE REVIEWS OR ASK FOR FIXES
+  # triggered by labeling RFR
+  acceptance-tests:
+    if: github.event.action == 'ready_for_review' || (github.event.action == 'labeled' && github.event.label.name == 'RFR')  # WARNING -> CHANGE for RFR when PR is ready
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup Github Actions
+      uses: actions/checkout@v2
+    
+    - name: Install required NPM dependencies
+      run: |
+        npm install @actions/core 
+        npm install @actions/github
+
+    - name: Add label Testing
+      uses: ./.github/actions/pull_request_update/ # Uses an action in the root directory
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        addLabel: 'Testing' 
+
+    - name: Unassign the author
+      uses: ./.github/actions/pull_request_update/ # Uses an action in the root directory
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        unassign: 'author' 
+
+    - name: Setup Docker environment
+      run: |
+        docker login --username uppler --password 'fKuR9Z+8bNjpi$f'
+        docker-compose --file docker-compose-light.yml up -d
+        docker exec -t uppler_www_1 bash -c "touch /home/developer/.present-if-github-action"
+        docker exec -t uppler_www_1 sudo rm -rf /var/www
+        docker exec -t uppler_www_1 ln -s /srv/www /var/www
+        docker exec -t uppler_www_1 sudo chown -R developer:developer /var/www
+        docker exec -t uppler_www_1 developer
+        docker exec -t uppler_www_1 cp /var/www/tests/_data/parameters_tests.yml.dist /var/www/app/config/parameters.yml
+        docker exec -t uppler_www_1 cp /var/www/tests/_data/config_dev_test_dist.yml.dist /var/www/app/config/config_dev.yml
+        docker exec -t -w /var/www uppler_www_1 composer install
+        docker exec -t uppler_www_1 /var/www/bin/console -V
+        google-chrome --version
+        chromedriver --version
+        docker exec -t uppler_mysql_1 mysql -P 3306 --protocol=tcp -u root --password=uppler -e "CREATE DATABASE wineandspirit" 
+        cat marketplace_tests.sql | docker exec -i uppler_mysql_1 mysql -u root --password=uppler wineandspirit
+        docker exec -t uppler_www_1 /var/www/bin/console uppler:dev:marketplace:switch wineandspirit
+        docker exec -t uppler_www_1 /var/www/bin/console --no-interaction doctrine:migrations:migrate
+        docker exec -t uppler_www_1 php /var/www/bin/console fos:elastica:populate
+        docker exec -t uppler_www_1 bash -c "cd /var/www/; npm install uglifycss -g"
+        docker exec -t uppler_www_1 bash -c "cd /var/www/; npm install uglify-es -g"
+        docker exec -t uppler_www_1 php /var/www/bin/console assets:install
+        docker exec -t uppler_www_1 php /var/www/bin/console assetic:dump
+        docker exec -t uppler_www_1 sudo chown -R developer:developer /var/www/var/cache
+        docker exec -t uppler_www_1 sudo chown -R developer:developer /var/www/var/logs
+        docker exec -t uppler_www_1 sudo chown -R developer:developer /var/www/app/sessions
+        docker exec -t uppler_www_1 uppler codeception:build
+
+    - name: Run Codeception tests
+      run: docker exec -t uppler_www_1 uppler codeception:run -g github-RFR
+
+    # IF TESTS FAIL -> output screenshots 
+    - name: Output screenshots of failed tests
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: failed-tests
+        path: tests/_output/
+
+    
+    # push the acceptance tests review
+    - name: Create an approval review if acceptance tests suite is successful
+      if: ${{ success() }}
+      uses: ./.github/actions/acceptance_tests_review/
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        success: true
+
+    - name: Request changes if acceptance tests has failed
+      if: ${{ failure() }}
+      uses: ./.github/actions/acceptance_tests_review/
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        success: false
+
+    - name: Remove label Testing
+      uses: ./.github/actions/pull_request_update/ # Uses an action in the root directory
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        removeLabel: 'Testing' 
+    
+    # IF TESTS SUCCEED -> check approvals and if not RTM then add label RFR + request reviews
+    - name: Check for approvals
+      if: ${{ success() }}
+      uses: ./.github/actions/approve_pull_request/ # Uses an action in the root directory
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+      

@@ -1,0 +1,55 @@
+name: Handle the reviews and check for approvals
+
+on:
+  pull_request_review:
+    types: [ submitted ]
+
+jobs:
+  # --------------------------------------------------------------------------------------------------------  
+  # CHECK IF THE PULL REQUEST CAN BE APPROVED OR ASK FOR FIXES
+  # triggered by pull request submission
+  submit-review:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup Github Actions
+      uses: actions/checkout@v2
+    
+    - name: Install required NPM dependencies
+      run: |
+        npm install @actions/core 
+        npm install @actions/github
+
+    # If reviewer request for changes-> add label FFF + unassign reviewer + assign author
+    - name: Request changes
+      if: github.event.review.state == 'changes_requested'
+      uses: ./.github/actions/pull_request_update/ # Uses an action in the root directory
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        removeLabel: 'RFR'
+        addLabel: 'FFF'
+        unassign: ${{ github.event.review.user.login }}
+        assign: 'author'
+
+    # If reviewer comments the pull request-> assign author
+    - name: Ask for comment response
+      if: github.event.review.state == 'commented' && github.event.review.user.login != github.event.pull_request.user.login 
+      uses: ./.github/actions/pull_request_update/ # Uses an action in the root directory
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        assign: 'author'
+
+    # If reviewer approves the pull request-> unassign
+    - name: Unassign reviewer
+      if: github.event.review.state == 'approved'
+      uses: ./.github/actions/pull_request_update/ # Uses an action in the root directory
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        unassign: ${{ github.event.review.user.login }}
+    
+    # If reviewer approves the pull request-> check approvals
+    - name: Check for approvals
+      if: github.event.review.state == 'approved'
+      uses: ./.github/actions/approve_pull_request/ # Uses an action in the root directory
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    

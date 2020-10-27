@@ -5,22 +5,24 @@
  */
 const core = require('@actions/core'),
     github = require('@actions/github'),
+    config = require('../config.js'),
+    commons = require('../commons.js'),
     token = core.getInput('token'),
     labelToAdd = core.getInput('addLabel'),
     labelToRemove = core.getInput('removeLabel'),
     collaboratorToAssign = core.getInput('assign'),
     collaboratorToUnassign = core.getInput('unassign'),
     octokit = github.getOctokit(token),
-    repository = process.env.GITHUB_REPOSITORY,
-    repositoryOwner = repository.split('/')[0],
-    repositoryName = repository.split('/')[1],
-    pullNumber = github.context.payload.pull_request.number;
+    repositoryOwner = config.repositoryOwner,
+    repositoryName = config.repositoryName,
+    pullRequest = github.context.payload.pull_request,
+    pullNumber = pullRequest.number;
 
 try {
     if (labelToRemove.length > 0) {
         removeLabel(labelToRemove);
     }
-
+ 
     if (labelToAdd.length > 0) {
         addLabel(labelToAdd);
     }
@@ -36,25 +38,10 @@ try {
     core.setFailed(error.message);
 }
 
-async function hasLabel(label) {
-    let { data: currentLabels } = await octokit.issues.listLabelsOnIssue({
-            owner: repositoryOwner,
-            repo: repositoryName,
-            issue_number: pullNumber,
-        }),
-        labelExists = false;
-
-    currentLabels.forEach(function(currentLabel) {
-        if (currentLabel.name == label) {
-            labelExists = true;
-        }
-    });
-
-    return labelExists;
-}
-
 async function removeLabel(label) {
-    let labelExists = await hasLabel(label);
+    let labels  = await commons.getLabels(pullRequest);
+    let labelExists = labels.includes(label);
+
     if (labelExists) {
         octokit.issues.removeLabel({
             owner: repositoryOwner,
@@ -77,7 +64,12 @@ function addLabel(label) {
 /**
  * Assign the given list of collaborators to the pull request
  */
-function assign(assignee) {
+async function assign(assignee) {
+    // get the real author of the pull request (in case of github bot creation)
+    if ('author' == assignee) {
+        assignee = await commons.getPullRequestAuthor(pullRequest);
+    }
+
     octokit.issues.addAssignees({
         owner: repositoryOwner,
         repo: repositoryName,
@@ -90,6 +82,11 @@ function assign(assignee) {
  * Unassign the reviewers of the pull request
  */
 async function unassign(assignee) {
+    // get the real author of the pull request (in case of github bot creation)
+    if ('author' == assignee) {
+        assignee = await commons.getPullRequestAuthor(pullRequest);
+    }
+
     octokit.issues.removeAssignees({
         owner: repositoryOwner,
         repo: repositoryName,
@@ -97,3 +94,4 @@ async function unassign(assignee) {
         assignees: [assignee],
     });
 }
+

@@ -1,0 +1,13 @@
+name: 'acceptance-tests-review'
+description: 'Creates a review after acceptance tests execution'
+inputs:
+  token:
+    description: 'The repository authentication token'
+    required: true
+  success:
+    description: 'Wether or not the test suite is successful'
+    required: true
+
+runs:
+  using: 'node12'
+  main: 'index.js'

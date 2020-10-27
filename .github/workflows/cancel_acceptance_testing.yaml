@@ -1,0 +1,21 @@
+name: Cancel the acceptance tests if code has changed
+on:
+  push
+
+jobs:
+  cancel-acceptance-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup Github Actions
+      uses: actions/checkout@v2
+    
+    - name: Install required NPM dependencies
+      run: |
+        npm install @actions/core 
+        npm install @actions/github
+
+    # CANCEL RUNNING TESTS OR TESTS TO RUN
+    - name: 'Cancel the running acceptance tests workflow'
+      uses: ./.github/actions/cancel_acceptance_testing/ 
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}

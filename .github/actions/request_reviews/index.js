@@ -1,181 +1,197 @@
 /**
  * Octokit documentation : https://octokit.github.io/rest.js/v18
- *
- * PULL REQUEST WORKFLOW ACTION
- *
- * 1. The developer is done, he adds the status RFT to its pull request -> the pull request is locked (mergeable false) -> acceptance tests are triggered
- * 2. a. Tests fails -> add label FFF -> assign author , the developer fixes its PR and add the label RFT when he's done
- *    b. Tests success -> add label RFR -> unassign author + request and assign reviewers (permanent + 2 randoms)
- * 3. a. Review changes_requested -> unassign reviewer -> remove label RFR -> add label FFF -> developer fixes its PR and add the label RFT to reenter tests process after his fixes
- *    b. Review comments -> assign author -> nothing happens the developer answer the comment and the reviewer decides if he approves or refuse the PR
- *    c. Review approved -> unassign reviewer
- *    					 -> if 2 approvals and label is RFR -> remove label RFR -> add label RTM -> unassign author -> assign mergeator -> unlock PR
  */
-
 const core = require('@actions/core'),
     github = require('@actions/github'),
+    tools = require('../tools.js'),
+    config = require('../config.js'),
+    commons = require('../commons.js'),
     token = core.getInput('token'),
     context = github.context,
     octokit = github.getOctokit(token),
     payload = context.payload,
-    repository = process.env.GITHUB_REPOSITORY,
-    repositoryOwner = repository.split('/')[0],
-    repositoryName = repository.split('/')[1],
+    repositoryOwner = config.repositoryOwner,
+    repositoryName = config.repositoryName,
     pullRequest = payload.pull_request,
-    author = pullRequest.user.login,
     pullNumber = pullRequest.number,
-    reviewers = core.getInput('reviewers').split(';'),
-    permanentReviewer = core.getInput('permanent_reviewer'),
-    reviewersNumber = core.getInput('reviewers_number');
+    collaborators = config.reviewers,
+    experts = config.experts,
+    permanentReviewer = config.permanentReviewer,
+    reviewersNumber = config.minimumuReviewersNumber,
+    botName = config.botName,
+    expertPrefix = config.labelPrefixExpert;
+
+var labels = [],
+    lastReviews = {},
+    author = null;
 
 try {
-    requestReviews();
+    process();
 } catch (error) {
     core.setFailed(error.message);
-}
-
-function addReviewer(reviewer, reviewersList) {
-    if (author !== reviewer && !reviewersList.includes(reviewer)) {
-        reviewersList.push(reviewer);
-    }
 }
 
 /**
  * Requests reviewers on the pull request
  */
-async function requestReviews() {
-    let isRTM = await hasLabel('RTM');
+async function process() {
+    try {
+        author = await commons.getPullRequestAuthor(pullRequest);
+        labels = await commons.getLabels(pullRequest);
+        let isRTM = labels.includes('RTM'),
+            isFFF = labels.includes('FFF');
+    
+        if (!isRTM) {
+            let reviews = await getReviews();
+            // get the last review state by reviewer
+            reviews.reverse().forEach(function (review) {
+                let reviewer = review.user.login;
 
-    if (!isRTM) {
-        let reviewers = await getReviewersList();
-        // add the reviewers
-        requestReviewers(reviewers);
-        // unassign the author
-        removeAssignees([author]);
-        // assign the reviewers
-        addAssignees(reviewers);
+                if (lastReviews[reviewer] == undefined) {
+                    lastReviews[reviewer] = review.state;
+                }
+            });
+
+            let reviewers = await getReviewers();
+            
+            // add the reviewers
+            octokit.pulls.requestReviewers({
+                owner: repositoryOwner,
+                repo: repositoryName,
+                pull_number: pullNumber,
+                reviewers: reviewers,
+            });
+
+            // unassign the author if not in request_changes status
+            if (!isFFF) {
+                octokit.issues.removeAssignees({
+                    owner: repositoryOwner,
+                    repo: repositoryName,
+                    issue_number: pullNumber,
+                    assignees: [author],
+                });
+            }
+    
+            // assign the reviewers
+            octokit.issues.addAssignees({
+                owner: repositoryOwner,
+                repo: repositoryName,
+                issue_number: pullNumber,
+                assignees: reviewers,
+            });
+        }
+    } catch (error) {
+        core.setFailed(error.message);
     }
 }
 
 /**
- * Build the reviewers list of a pull request
+ * List all the reviews of the pull request (review_date ASC)
  */
-async function getReviewersList() {
-    // if some reviewers are already requested, keep them by default
-    let requestedReviewers = await listCurrentReviewers(),
-        // get all previous reviews for the pull request
-        { data: reviews } = await octokit.pulls.listReviews({
+async function getReviews()
+{
+    try {
+        let { data: reviews } = await octokit.pulls.listReviews({
             owner: repositoryOwner,
             repo: repositoryName,
             pull_number: pullNumber,
         });
-
-    // always ensure that the permanentReviewer is requested
-    addReviewer(permanentReviewer, requestedReviewers);
-
-    // always request the reviewers who have left a non-approved review
-    let rvwrs = []; // used to take in account only the last review of each collaborator
-    reviews.reverse().forEach(function(review) {
-        let reviewer = review.user.login;
-
-        if (!rvwrs.includes(reviewer)) {
-            rvwrs.push(reviewer);
-            // only request review again if the reviewer has not previously approved
-            if (review.state != 'APPROVED') {
-                addReviewer(reviewer, requestedReviewers);
-            }
-        }
-    });
-
-    // while the configured number of reviewers is not reached, request random reviewers into the list of available reviewers
-    shuffle(reviewers).forEach(function(rvwr) {
-        if (requestedReviewers.length < reviewersNumber) {
-            addReviewer(rvwr, requestedReviewers);
-        }
-    });
-
-    return requestedReviewers;
+    
+        return reviews;
+    } catch (error) {
+        core.setFailed(error.message);
+    }
 }
+
+/**
+ * Get the existent reviewers list or create a new one
+ */
+async function getReviewers()
+{
+    try {
+        // get the reviewers whose are already requested
+        var reviewers = await listCurrentReviewers();
+        // request all the reviewers whose have left a 'non approved' review before 
+        for (const [reviewer, value] of Object.entries(lastReviews)) {
+            addReviewer(reviewer, reviewers);    
+        }
+    
+        // if no reviewer has already been requested then get permanent + experts + random
+        if (reviewers.length == 0) {
+            expertReviewers = await getExperts();
+            expertReviewers.forEach(function(reviewer) {
+                addReviewer(reviewer, reviewers);    
+            });
+            // add th permanent reviewer
+            addReviewer(permanentReviewer, reviewers);
+    
+            // add random reviewer until required number of reviewers is reached
+            tools.shuffle(collaborators).forEach(function(reviewer) {
+                if (reviewers.length < reviewersNumber) {
+                    addReviewer(reviewer, reviewers);
+                }
+            });
+        }
+    
+        return reviewers;
+    } catch (error) {
+        core.setFailed(error.message);
+    }
+}
+
 
 /**
  * Get the list of already requested reviewers for the pull request
  */
 async function listCurrentReviewers() {
-    let { data: currentReviewers } = await octokit.pulls.listRequestedReviewers({
-            owner: repositoryOwner,
-            repo: repositoryName,
-            pull_number: pullNumber,
-        }),
-        results = [];
-
-    currentReviewers.users.forEach(function(reviewer) {
-        addReviewer(reviewer.login, results);
-    });
-
-    return results;
-}
-
-/**
- * Request the given list of collaborators to the pull request review
- */
-function requestReviewers(reviewers) {
-    octokit.pulls.requestReviewers({
-        owner: repositoryOwner,
-        repo: repositoryName,
-        pull_number: pullNumber,
-        reviewers: reviewers,
-    });
-}
-
-/**
- * Assign the given list of collaborators to the pull request
- */
-function addAssignees(assignees) {
-    octokit.issues.addAssignees({
-        owner: repositoryOwner,
-        repo: repositoryName,
-        issue_number: pullNumber,
-        assignees: assignees,
-    });
-}
-
-/**
- * Unassign the given list of collaborators to the pull request
- */
-function removeAssignees(assignees) {
-    octokit.issues.removeAssignees({
-        owner: repositoryOwner,
-        repo: repositoryName,
-        issue_number: pullNumber,
-        assignees: assignees,
-    });
-}
-
-/**
- * Shuffles array in place.
- */
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+    try {
+        let { data: currentReviewers } = await octokit.pulls.listRequestedReviewers({
+                owner: repositoryOwner,
+                repo: repositoryName,
+                pull_number: pullNumber,
+            }),
+            results = [];
+    
+        currentReviewers.users.forEach(function(reviewer) {
+            addReviewer(reviewer.login, results);
+        });
+    
+        return results;
+    } catch (error) {
+        core.setFailed(error.message);
     }
-
-    return array;
 }
 
-async function hasLabel(label) {
-    let { data: currentLabels } = await octokit.issues.listLabelsOnIssue({
-            owner: repositoryOwner,
-            repo: repositoryName,
-            issue_number: pullNumber,
-        }),
-        labelExists = false;
+/**
+ * Retrieves the experts to assign to the pull request
+ */
+async function getExperts()
+{
+    try {
+        let results = [];
+    
+        labels.forEach(function(label) {
+            if (label.indexOf(expertPrefix) === 0) {
+                let domain = label.substring(expertPrefix.length).toLowerCase();
+                
+                if (experts[domain] != undefined) {
+                    addReviewer(experts[domain], results);
+                }
+            }
+        });
+    
+        return results;
+    } catch (error) {
+        core.setFailed(error.message);
+    }
+}
 
-    currentLabels.forEach(function(currentLabel) {
-        if (currentLabel.name == label) {
-            labelExists = true;
-        }
-    });
-
-    return labelExists;
+function addReviewer(reviewer, reviewersList) {
+    if (botName !== reviewer // never add the git bot as a reviewer
+        && author !== reviewer // cannot assign the pull request author as a reviewer
+        && !reviewersList.includes(reviewer) // don't assign a reviewer twice
+        && !(reviewer != permanentReviewer && lastReviews[reviewer] == 'APPROVED') // don't request the reviewer if its last review is approved (except for permanentReviewer)
+    ) {
+        reviewersList.push(reviewer);
+    }
 }

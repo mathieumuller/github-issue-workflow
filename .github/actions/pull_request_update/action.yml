@@ -16,9 +16,6 @@ inputs:
   unassign:
     description: 'The collaborator login to assign'
     required: false
-  lock:
-    description: 'Whether or not the pull request has to be locked/unlocked (bool)'
-    required: false
 runs:
   using: 'node12'
   main: 'index.js'

@@ -1,0 +1,13 @@
+name: 'cancel-acceptance-testing-workflow'
+description: 'Cancel the acceptance testing workflow'
+inputs:
+  token:
+    description: 'The repository authentication token'
+    required: true
+  workflow: 
+    description: 'The workflow name'
+    required: true
+    default: .github/workflows/acceptance_testing.yaml
+runs:
+  using: 'node12'
+  main: 'index.js'
