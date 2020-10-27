@@ -58,5 +58,5 @@ module.exports = {
         "search": "wirabelle",
     },
     columnTriggeringPullRequest: 'In Progress',
-    issueTypesTriggeringPullRequest: ['Feature', 'Bug'],
+    issueTypesTriggeringPullRequest: ['Type:Feature', 'Type:Bug'],
 }
