@@ -157,7 +157,7 @@ async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchN
             ref: "refs/heads/"+releaseBranchName
         }),
         // convert the content into json
-        changelogJSON = JSON.parse(file.content),
+        changelogJSON = JSON.parse(tools.base64Decode(file.content)),
         // create the new entry to add to the changelog
         changelogRaw = getChangelogRaw(issue, releaseBranchName)
     ;
