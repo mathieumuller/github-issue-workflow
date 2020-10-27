@@ -4,26 +4,6 @@ inputs:
   token:
     description: 'The repository authentication token'
     required: true
-  approvals_number:
-    description: 'The minimum number of reviews required for approval'
-    required: true
-    default: 2
-  permanent_reviewer:
-    description: 'The collaborator assigned by default on pull requests'
-    required: true
-    default: mathieumuller
-  label_approved:
-    description: 'The label to add when enough approvals'
-    required: true
-    default: RTM
-  label_approvable:
-    description: 'The label required to begin the approval process'
-    required: true
-    default: RFR
-  mergeator:
-    description: 'The collaborator in charge to merge the pull requests'
-    required: true
-    default: Neime
 runs:
   using: 'node12'
   main: 'index.js'

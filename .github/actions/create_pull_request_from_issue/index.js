@@ -7,8 +7,8 @@ const tools = require('../tools.js'),
     context = github.context,
     octokit = github.getOctokit(token),
     payload = context.payload,
-    repositoryOwner = config.repositoryOwner,
-    repositoryName = config.repositoryName,
+    repositoryOwner = config.repositoryName,
+    repositoryName = config.repositoryOwner,
     typeLabelPrefix = config.labelPrefixType,
     expertLabelPrefix = config.labelPrefixExpert,
     projectCard = payload.project_card,
@@ -51,7 +51,7 @@ async function process() {
     }
 
     let milestoneTitle = issue.milestone.title,
-        branchName = ([issueType.substring(typeLabelPrefix.length), tools.stringToSlug(issue.title)].join('/')).toLowerCase(),
+        branchName = [issueType.substring(typeLabelPrefix.length), tools.stringToSlug(issue.title)].join('/'),
         pullRequestName = issue.title,
         releaseBranchName = "release/v"+milestoneTitle;
 
@@ -60,26 +60,14 @@ async function process() {
     // create a new entry in the changelog file
     await updateChangeLog(milestoneTitle, issue, branchName, releaseBranchName);
 
-
-    // TRICKY ALERT!! 
-    // we have to create the draft pull request on dev and use the resolves keyword to link the PR and the issue
-    // then we have to update the pr base  to the release branch
+    // creates the draft pull request
     let { data: pullRequest } = await octokit.pulls.create({
         owner: repositoryOwner,
         repo: repositoryName,
         title: pullRequestName,
         head: branchName,
-        base: config.mainBranch,
-        draft: 'yes',
-        body: "resolves #"+issue.number
-    });
-    
-    // change the base of the pull request for the release branch
-    octokit.pulls.update({
-        owner: repositoryOwner,
-        repo: repositoryName,
-        pull_number: pullRequest.number,
         base: releaseBranchName,
+        draft: 'yes'
     });
 
 
@@ -87,7 +75,8 @@ async function process() {
     // as it's impossible to link an issue through github api, we add a link into a comment
     let metadata = {
         "github_metadata": {
-            "author": payload.sender.login
+            "author": payload.sender.login,
+            "issue": issueNumber
         }
     };
     octokit.issues.createComment({
@@ -149,7 +138,7 @@ async function getOrCreateBranch(releaseBranchName,  branchName)
 async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchName)
 {
     // Get the current content of the file on the target branch
-    let path="changelog.md",
+    let path="changelog.json",
         {data: file} = await octokit.repos.getContent({
             owner: repositoryOwner,
             repo: repositoryName,
@@ -157,24 +146,19 @@ async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchN
             ref: "refs/heads/"+releaseBranchName
         }),
         // convert the content into json
-        changelogJSON = await getMarkdownToJSONContent(file.content),
+        changelogJSON = JSON.parse(file.content),
         // create the new entry to add to the changelog
-        changelogRaw = getChangelogRaw(issue)
+        changelogEntry = getChangelogEntry(issue, releaseBranchName)
     ;
 
-    // Add the new content at the appropriate position (depending on the issue milestone)
-    if (changelogJSON[milestoneTitle] !== undefined) {
-        changelogJSON[milestoneTitle].raw += changelogRaw;
-    } else {
-        changelogJSON[milestoneTitle] = {raw: changelogRaw};
-    }
+    changelogJSON.push(changelogEntry);
 
     // push the commit to the given branch 
     let response = await octokit.repos.createOrUpdateFileContents({
         owner: repositoryOwner,
         repo: repositoryName,
         path: path,
-        message: "update changelog.md",
+        message: "update changelog.json",
         // content has to be base64 encoded
         content: tools.base64Encode(md2json.toMd(changelogJSON)),
         branch: branchName,
@@ -275,16 +259,12 @@ async function getMarkdownToJSONContent(content)
  * Build the content to add to the changelog 
  * @param {object} issue 
  */
-function getChangelogRaw(issue)
+function getChangelogEntry(issue, releaseBranchName)
 {
-    return "- ["
-        + issue.title
-        + "]("
-        + issue.html_url  
-        + ") (@"
-        + payload.sender.login
-        + ")\n"
-    ;
+    return {
+        "release": releaseBranchName,
+        "entry":  "[" + issue.title + "](" + issue.html_url  + ") (@" + payload.sender.login + ")"
+    };
 }
 
 /**
