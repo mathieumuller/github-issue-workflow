@@ -69,19 +69,18 @@ async function process() {
         repo: repositoryName,
         title: pullRequestName,
         head: branchName,
-        base: releaseBranchName,//config.mainBranch,
+        base: config.mainBranch,
         draft: 'yes',
-        // body: "resolves #"+issue.number
-        issue: issue.number
+        body: "resolves #"+issue.number
     });
 
     // change the base of the pull request for the release branch
-    // octokit.pulls.update({
-    //     owner: repositoryOwner,
-    //     repo: repositoryName,
-    //     pull_number: pullRequest.number,
-    //     base: releaseBranchName,
-    // });
+    octokit.pulls.update({
+        owner: repositoryOwner,
+        repo: repositoryName,
+        pull_number: pullRequest.number,
+        base: releaseBranchName,
+    });
 
 
     // as the pull request is created by the github bot, we set the author into a comment
