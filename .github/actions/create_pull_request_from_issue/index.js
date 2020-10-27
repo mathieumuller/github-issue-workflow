@@ -171,7 +171,7 @@ async function updateChangeLog(milestoneTitle, issue, branchName, releaseBranchN
         path: path,
         message: "update changelog.md",
         // content has to be base64 encoded
-        content: tools.base64Encode(md2json.toMd(changelogJSON)),
+        content: tools.base64Encode(JSON.stringify(changelogJSON, null, 2)),
         branch: branchName,
         sha: file.sha,
         committer: {
